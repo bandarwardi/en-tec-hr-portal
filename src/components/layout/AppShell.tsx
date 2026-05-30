@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
+import logoUrl from "../../assets/imgs/logo.jpeg";
 
 const NAV = [
   { to: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
@@ -65,8 +66,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       >
         <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
-            <Building2 className="h-5 w-5" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-background overflow-hidden">
+            <img src={logoUrl} alt="EN TEC" className="h-full w-full object-cover" />
           </div>
           <div className="leading-tight">
             <div className="text-sm font-bold">EN TEC</div>

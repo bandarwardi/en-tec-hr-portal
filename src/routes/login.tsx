@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { Building2, Loader2, Lock, Mail } from "lucide-react";
+import logoUrl from "../assets/imgs/logo.jpeg";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -50,8 +51,8 @@ function LoginPage() {
       
       <Card className="w-full max-w-md p-8 sm:p-10 shadow-2xl relative z-10 border-border/50 bg-card/95 backdrop-blur">
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg">
-            <Building2 className="h-8 w-8" />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-background shadow-lg overflow-hidden border border-border/50">
+            <img src={logoUrl} alt="EN TEC" className="h-full w-full object-cover" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">EN TEC HRMS</h1>
           <p className="mt-2 text-sm text-muted-foreground font-medium">نظام إدارة الموارد البشرية المؤسسي</p>

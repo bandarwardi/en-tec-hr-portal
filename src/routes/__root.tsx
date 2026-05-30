@@ -9,6 +9,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import logoUrl from "../assets/imgs/logo.jpeg";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "../lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
@@ -68,8 +69,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "EN TEC HRMS — نظام إدارة الموارد البشرية" },
       { name: "description", content: "نظام EN TEC لإدارة الموارد البشرية: موظفون، حضور، إجازات، رواتب وتقارير." },
+      { property: "og:title", content: "EN TEC HRMS — نظام إدارة الموارد البشرية" },
+      { property: "og:description", content: "نظام EN TEC لإدارة الموارد البشرية: موظفون، حضور، إجازات، رواتب وتقارير." },
+      { property: "og:image", content: logoUrl },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "EN TEC HRMS — نظام إدارة الموارد البشرية" },
+      { name: "twitter:description", content: "نظام EN TEC لإدارة الموارد البشرية: موظفون، حضور، إجازات، رواتب وتقارير." },
+      { name: "twitter:image", content: logoUrl },
     ],
     links: [
+      { rel: "icon", type: "image/jpeg", href: logoUrl },
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },

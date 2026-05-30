@@ -9,6 +9,7 @@ import {
   Building2, Search, CheckCircle2, Clock, XCircle, 
   ArrowRight, Calendar, MapPin, ExternalLink 
 } from "lucide-react";
+import logoUrl from "../assets/imgs/logo.jpeg";
 
 export const Route = createFileRoute("/track")({
   component: TrackPage,
@@ -76,8 +77,8 @@ function TrackPage() {
 
         <div className="relative z-10">
           <div className="mb-8 flex flex-col items-center text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-              <Building2 className="h-7 w-7" />
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-background overflow-hidden border border-border/50 shadow-sm">
+              <img src={logoUrl} alt="EN TEC" className="h-full w-full object-cover" />
             </div>
             <h1 className="text-2xl font-bold">تتبع حالة الطلب</h1>
             <p className="mt-2 text-sm text-muted-foreground">أدخل رقم الطلب الخاص بك لمعرفة آخر المستجدات</p>

@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { Building2, Loader2 } from "lucide-react";
+import logoUrl from "../assets/imgs/logo.jpeg";
 
 export const Route = createFileRoute("/forgot-password")({
   component: ForgotPage,
@@ -34,8 +35,8 @@ function ForgotPage() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted to-background px-4">
       <Card className="w-full max-w-md p-8 shadow-[var(--shadow-elevated)]">
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-            <Building2 className="h-7 w-7" />
+          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-background overflow-hidden border border-border/50 shadow-sm">
+            <img src={logoUrl} alt="EN TEC" className="h-full w-full object-cover" />
           </div>
           <h1 className="text-2xl font-bold">استعادة كلمة المرور</h1>
           <p className="mt-1 text-sm text-muted-foreground">سنرسل رابط الاستعادة إلى بريدك</p>

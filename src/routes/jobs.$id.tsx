@@ -16,6 +16,7 @@ import {
   CheckCircle2, User, Calendar, GraduationCap, ShieldAlert, 
   Award, Mail, Phone, BookOpen, Clock
 } from "lucide-react";
+import logoUrl from "../assets/imgs/logo.jpeg";
 
 export const Route = createFileRoute("/jobs/$id")({
   component: PublicJobPage,
@@ -172,8 +173,8 @@ function PublicJobPage() {
         
         {/* Header */}
         <div className="text-center space-y-3">
-          <div className="mx-auto h-16 w-16 bg-primary text-primary-foreground flex items-center justify-center rounded-2xl shadow-lg transform hover:rotate-6 transition-all duration-300">
-            <Building2 className="h-8 w-8" />
+          <div className="mx-auto h-16 w-16 bg-background flex items-center justify-center rounded-2xl shadow-lg transform hover:rotate-6 transition-all duration-300 overflow-hidden border border-border/50">
+            <img src={logoUrl} alt="EN TEC" className="h-full w-full object-cover" />
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-foreground bg-clip-text bg-gradient-to-r from-primary to-accent">EN TEC Careers</h1>
           <p className="text-muted-foreground text-sm font-medium">بوابة التوظيف الرسمية والتقديم الإلكتروني</p>
