@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { StatCard } from "@/components/layout/StatCard";
 import { Card } from "@/components/ui/card";
@@ -6,22 +7,77 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Wallet, TrendingUp, Receipt, Download, FileText } from "lucide-react";
+import { useCollection, addItem, updateItem, orderBy } from "@/lib/use-collection";
+import { toast } from "sonner";
+import { formatEGP, CURRENCY_LABEL } from "@/lib/currency";
 
 export const Route = createFileRoute("/_app/payroll")({
   component: PayrollPage,
 });
 
-const slips = [
-  { name: "أحمد علي السالم", base: 12000, allow: 2500, deduct: 800, net: 13700, status: "مدفوع" },
-  { name: "سارة محمود", base: 9500, allow: 1500, deduct: 400, net: 10600, status: "مدفوع" },
-  { name: "خالد العتيبي", base: 15000, allow: 4000, deduct: 1200, net: 17800, status: "بانتظار الدفع" },
-  { name: "نورة الحربي", base: 11000, allow: 2000, deduct: 600, net: 12400, status: "مدفوع" },
-  { name: "فهد القحطاني", base: 8500, allow: 1200, deduct: 300, net: 9400, status: "بانتظار الدفع" },
-];
+interface Slip {
+  month: string;
+  employeeId: string;
+  employeeName: string;
+  base: number;
+  allow: number;
+  deduct: number;
+  net: number;
+  status: string;
+}
 
-const fmt = (n: number) => n.toLocaleString("ar-SA") + " ر.س";
+const currentMonth = () => new Date().toISOString().slice(0, 7);
 
 function PayrollPage() {
+  const [month, setMonth] = useState(currentMonth());
+  const { data: employees } = useCollection<{ name: string; baseSalary?: number; allowance?: number }>("employees");
+  const { data: settings } = useCollection<{ insuranceRate?: number; taxRate?: number }>("settings_doc");
+  const { data: allSlips, loading } = useCollection<Slip>("payroll", [orderBy("createdAt", "desc")]);
+
+  const slips = useMemo(() => allSlips.filter((s) => s.month === month), [allSlips, month]);
+
+  const totals = useMemo(() => {
+    const base = slips.reduce((s, x) => s + (x.base || 0), 0);
+    const allow = slips.reduce((s, x) => s + (x.allow || 0), 0);
+    const deduct = slips.reduce((s, x) => s + (x.deduct || 0), 0);
+    const net = slips.reduce((s, x) => s + (x.net || 0), 0);
+    return { base, allow, deduct, net };
+  }, [slips]);
+
+  const generate = async () => {
+    if (slips.length > 0) return toast.error("كشف هذا الشهر موجود مسبقاً");
+    if (employees.length === 0) return toast.error("لا يوجد موظفون");
+    const ins = (settings[0]?.insuranceRate ?? 10) / 100;
+    const tax = (settings[0]?.taxRate ?? 0) / 100;
+    for (const e of employees as any[]) {
+      const base = Number(e.baseSalary || 0);
+      const allow = Number(e.allowance || 0);
+      const deduct = Math.round(base * (ins + tax));
+      const net = base + allow - deduct;
+      await addItem("payroll", {
+        month, employeeId: e.id, employeeName: e.name,
+        base, allow, deduct, net, status: "بانتظار الدفع",
+      });
+    }
+    toast.success("تم إنشاء كشف الرواتب");
+  };
+
+  const markPaid = async (id: string) => {
+    await updateItem("payroll", id, { status: "مدفوع" });
+    toast.success("تم تسجيل الدفع");
+  };
+
+  const exportCsv = () => {
+    const rows = [
+      ["الشهر", "الموظف", "الأساسي", "البدلات", "الخصومات", "الصافي", "الحالة"],
+      ...slips.map((s) => [s.month, s.employeeName, s.base, s.allow, s.deduct, s.net, s.status]),
+    ];
+    const csv = "\uFEFF" + rows.map((r) => r.map((c) => `"${String(c ?? "")}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = `payroll-${month}.csv`; a.click();
+  };
+
   return (
     <div>
       <PageHeader
@@ -29,23 +85,24 @@ function PayrollPage() {
         subtitle="كشوفات الرواتب، البدلات، الخصومات والمكافآت"
         actions={
           <>
-            <Button variant="outline"><Download className="ml-2 h-4 w-4" />تصدير كشف</Button>
-            <Button><Receipt className="ml-2 h-4 w-4" />إنشاء كشف الشهر</Button>
+            <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="rounded-md border border-input bg-background px-3 py-1.5 text-sm" dir="ltr" />
+            <Button variant="outline" onClick={exportCsv}><Download className="ml-2 h-4 w-4" />تصدير</Button>
+            <Button onClick={generate}><Receipt className="ml-2 h-4 w-4" />إنشاء كشف الشهر</Button>
           </>
         }
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="إجمالي الرواتب (نوفمبر)" value="٤٢٨,٥٠٠ ر.س" icon={Wallet} tone="primary" />
-        <StatCard title="البدلات" value="٧٢,٠٠٠ ر.س" icon={TrendingUp} tone="success" />
-        <StatCard title="الخصومات" value="١٨,٤٠٠ ر.س" icon={Receipt} tone="warning" />
-        <StatCard title="صافي الرواتب" value="٤٨٢,١٠٠ ر.س" icon={Wallet} tone="accent" />
+        <StatCard title={`إجمالي الأساسي`} value={formatEGP(totals.base)} icon={Wallet} tone="primary" />
+        <StatCard title="البدلات" value={formatEGP(totals.allow)} icon={TrendingUp} tone="success" />
+        <StatCard title="الخصومات" value={formatEGP(totals.deduct)} icon={Receipt} tone="warning" />
+        <StatCard title="صافي الرواتب" value={formatEGP(totals.net)} icon={Wallet} tone="accent" />
       </div>
 
       <Card className="mt-6 overflow-hidden">
         <div className="flex items-center justify-between border-b border-border p-4">
-          <h3 className="text-base font-semibold">كشف الرواتب — نوفمبر 2026</h3>
-          <Badge variant="outline" className="bg-accent/10 text-accent">مسودة</Badge>
+          <h3 className="text-base font-semibold">كشف الرواتب — {month}</h3>
+          <Badge variant="outline" className="bg-accent/10 text-accent">{CURRENCY_LABEL}</Badge>
         </div>
         <div className="overflow-x-auto">
           <Table>
@@ -61,20 +118,22 @@ function PayrollPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {loading && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">جاري التحميل...</TableCell></TableRow>}
+              {!loading && slips.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-6">لا يوجد كشف لهذا الشهر — اضغط "إنشاء كشف الشهر"</TableCell></TableRow>}
               {slips.map((s) => (
-                <TableRow key={s.name}>
-                  <TableCell className="font-medium">{s.name}</TableCell>
-                  <TableCell>{fmt(s.base)}</TableCell>
-                  <TableCell className="text-success">+{fmt(s.allow)}</TableCell>
-                  <TableCell className="text-destructive">-{fmt(s.deduct)}</TableCell>
-                  <TableCell className="font-bold">{fmt(s.net)}</TableCell>
+                <TableRow key={s.id}>
+                  <TableCell className="font-medium">{s.employeeName}</TableCell>
+                  <TableCell>{formatEGP(s.base)}</TableCell>
+                  <TableCell className="text-success">+{formatEGP(s.allow)}</TableCell>
+                  <TableCell className="text-destructive">-{formatEGP(s.deduct)}</TableCell>
+                  <TableCell className="font-bold">{formatEGP(s.net)}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className={s.status === "مدفوع" ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}>
                       {s.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm"><FileText className="ml-1 h-4 w-4" />Payslip</Button>
+                    {s.status !== "مدفوع" && <Button size="sm" variant="ghost" onClick={() => markPaid(s.id)}><FileText className="ml-1 h-4 w-4" />تسجيل دفع</Button>}
                   </TableCell>
                 </TableRow>
               ))}

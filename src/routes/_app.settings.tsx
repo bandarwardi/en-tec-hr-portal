@@ -1,16 +1,72 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Building2, Wallet, CalendarCheck, ShieldCheck, Bell } from "lucide-react";
+import { Building2, Wallet, CalendarCheck, ShieldCheck, Save } from "lucide-react";
+import { setDocItem, getDocOnce } from "@/lib/use-collection";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
 });
 
+interface Settings {
+  companyName: string;
+  taxNumber: string;
+  address: string;
+  currency: string;
+  payDay: number;
+  insuranceRate: number;
+  taxRate: number;
+  workStart: string;
+  workEnd: string;
+  lateMinutes: number;
+  workDays: string;
+}
+
+const defaults: Settings = {
+  companyName: "EN TEC",
+  taxNumber: "",
+  address: "القاهرة، مصر",
+  currency: "ج.م",
+  payDay: 25,
+  insuranceRate: 11,
+  taxRate: 10,
+  workStart: "09:00",
+  workEnd: "17:00",
+  lateMinutes: 10,
+  workDays: "الأحد - الخميس",
+};
+
 function SettingsPage() {
+  const [data, setData] = useState<Settings>(defaults);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const d = await getDocOnce("settings_doc", "general");
+      if (d) setData({ ...defaults, ...(d as any) });
+      setLoading(false);
+    })();
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await setDocItem("settings_doc", "general", data);
+      toast.success("تم حفظ الإعدادات");
+    } catch (e: any) { toast.error(e.message); }
+    finally { setSaving(false); }
+  };
+
+  const set = <K extends keyof Settings>(k: K, v: Settings[K]) => setData((s) => ({ ...s, [k]: v }));
+
+  if (loading) return <p className="text-muted-foreground">جاري التحميل...</p>;
+
   return (
     <div>
       <PageHeader title="الإعدادات" subtitle="إدارة إعدادات الشركة والنظام" />
@@ -22,9 +78,9 @@ function SettingsPage() {
             <h3 className="text-base font-semibold">بيانات الشركة</h3>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5"><Label>اسم الشركة</Label><Input defaultValue="EN TEC" /></div>
-            <div className="space-y-1.5"><Label>الرقم الضريبي</Label><Input dir="ltr" className="text-right" defaultValue="300123456700003" /></div>
-            <div className="space-y-1.5 sm:col-span-2"><Label>العنوان</Label><Input defaultValue="الرياض، المملكة العربية السعودية" /></div>
+            <div className="space-y-1.5"><Label>اسم الشركة</Label><Input value={data.companyName} onChange={(e) => set("companyName", e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>الرقم الضريبي</Label><Input dir="ltr" className="text-right" value={data.taxNumber} onChange={(e) => set("taxNumber", e.target.value)} /></div>
+            <div className="space-y-1.5 sm:col-span-2"><Label>العنوان</Label><Input value={data.address} onChange={(e) => set("address", e.target.value)} /></div>
           </div>
         </Card>
 
@@ -34,10 +90,10 @@ function SettingsPage() {
             <h3 className="text-base font-semibold">إعدادات الرواتب</h3>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5"><Label>العملة</Label><Input defaultValue="ر.س" /></div>
-            <div className="space-y-1.5"><Label>يوم صرف الراتب</Label><Input type="number" defaultValue={25} /></div>
-            <div className="space-y-1.5"><Label>نسبة التأمينات</Label><Input dir="ltr" className="text-right" defaultValue="10%" /></div>
-            <div className="space-y-1.5"><Label>نسبة الضريبة</Label><Input dir="ltr" className="text-right" defaultValue="15%" /></div>
+            <div className="space-y-1.5"><Label>العملة</Label><Input value={data.currency} onChange={(e) => set("currency", e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>يوم صرف الراتب</Label><Input type="number" dir="ltr" className="text-right" value={data.payDay} onChange={(e) => set("payDay", Number(e.target.value))} /></div>
+            <div className="space-y-1.5"><Label>نسبة التأمينات %</Label><Input type="number" dir="ltr" className="text-right" value={data.insuranceRate} onChange={(e) => set("insuranceRate", Number(e.target.value))} /></div>
+            <div className="space-y-1.5"><Label>نسبة الضريبة %</Label><Input type="number" dir="ltr" className="text-right" value={data.taxRate} onChange={(e) => set("taxRate", Number(e.target.value))} /></div>
           </div>
         </Card>
 
@@ -47,10 +103,10 @@ function SettingsPage() {
             <h3 className="text-base font-semibold">إعدادات الحضور</h3>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5"><Label>بداية الدوام</Label><Input type="time" dir="ltr" className="text-right" defaultValue="08:00" /></div>
-            <div className="space-y-1.5"><Label>نهاية الدوام</Label><Input type="time" dir="ltr" className="text-right" defaultValue="17:00" /></div>
-            <div className="space-y-1.5"><Label>سماحية التأخير (دقيقة)</Label><Input type="number" defaultValue={10} /></div>
-            <div className="space-y-1.5"><Label>أيام العمل</Label><Input defaultValue="السبت - الخميس" /></div>
+            <div className="space-y-1.5"><Label>بداية الدوام</Label><Input type="time" dir="ltr" className="text-right" value={data.workStart} onChange={(e) => set("workStart", e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>نهاية الدوام</Label><Input type="time" dir="ltr" className="text-right" value={data.workEnd} onChange={(e) => set("workEnd", e.target.value)} /></div>
+            <div className="space-y-1.5"><Label>سماحية التأخير (دقيقة)</Label><Input type="number" dir="ltr" className="text-right" value={data.lateMinutes} onChange={(e) => set("lateMinutes", Number(e.target.value))} /></div>
+            <div className="space-y-1.5"><Label>أيام العمل</Label><Input value={data.workDays} onChange={(e) => set("workDays", e.target.value)} /></div>
           </div>
         </Card>
 
@@ -69,7 +125,7 @@ function SettingsPage() {
       </div>
 
       <div className="mt-6 flex justify-end">
-        <Button><Bell className="ml-2 h-4 w-4" />حفظ الإعدادات</Button>
+        <Button onClick={save} disabled={saving}><Save className="ml-2 h-4 w-4" />{saving ? "...جاري الحفظ" : "حفظ الإعدادات"}</Button>
       </div>
     </div>
   );
