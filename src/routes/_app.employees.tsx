@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Download, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Download, Pencil, Trash2, ExternalLink } from "lucide-react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -184,7 +184,12 @@ function EmployeesPage() {
               {filtered.map((e) => (
                 <TableRow key={e.id}>
                   <TableCell className="font-mono text-xs text-muted-foreground">{e.code}</TableCell>
-                  <TableCell className="font-medium">{e.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <Link to="/employees/$id" params={{ id: e.id }} className="hover:text-accent hover:underline inline-flex items-center gap-1">
+                      {e.name}
+                      <ExternalLink className="h-3 w-3 opacity-60" />
+                    </Link>
+                  </TableCell>
                   <TableCell>{e.dept}</TableCell>
                   <TableCell>{e.role}</TableCell>
                   <TableCell dir="ltr" className="text-right text-muted-foreground">{e.email}</TableCell>
