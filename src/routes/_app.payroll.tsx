@@ -10,12 +10,14 @@ import { Wallet, TrendingUp, Receipt, Download, FileText } from "lucide-react";
 import { useCollection, addItem, updateItem, orderBy } from "@/lib/use-collection";
 import { toast } from "sonner";
 import { formatEGP, CURRENCY_LABEL } from "@/lib/currency";
+import { calcEmployeeDeductions } from "@/lib/payroll-calc";
 
 export const Route = createFileRoute("/_app/payroll")({
   component: PayrollPage,
 });
 
 interface Slip {
+  id?: string;
   month: string;
   employeeId: string;
   employeeName: string;
@@ -24,15 +26,18 @@ interface Slip {
   deduct: number;
   net: number;
   status: string;
+  breakdown?: string;
 }
 
 const currentMonth = () => new Date().toISOString().slice(0, 7);
 
 function PayrollPage() {
   const [month, setMonth] = useState(currentMonth());
-  const { data: employees } = useCollection<{ name: string; baseSalary?: number; allowance?: number }>("employees");
-  const { data: settings } = useCollection<{ insuranceRate?: number; taxRate?: number }>("settings_doc");
+  const { data: employees } = useCollection<any>("employees");
+  const { data: settings } = useCollection<any>("settings_doc");
   const { data: allSlips, loading } = useCollection<Slip>("payroll", [orderBy("createdAt", "desc")]);
+  const { data: attendance } = useCollection<any>("attendance");
+  const { data: leaves } = useCollection<any>("leaves");
 
   const slips = useMemo(() => allSlips.filter((s) => s.month === month), [allSlips, month]);
 
@@ -47,19 +52,43 @@ function PayrollPage() {
   const generate = async () => {
     if (slips.length > 0) return toast.error("كشف هذا الشهر موجود مسبقاً");
     if (employees.length === 0) return toast.error("لا يوجد موظفون");
-    const ins = (settings[0]?.insuranceRate ?? 10) / 100;
-    const tax = (settings[0]?.taxRate ?? 0) / 100;
-    for (const e of employees as any[]) {
+    const appSettings = settings[0] || {};
+    const ins = (appSettings.insuranceRate ?? 10) / 100;
+    const tax = (appSettings.taxRate ?? 0) / 100;
+
+    for (const e of employees) {
       const base = Number(e.baseSalary || 0);
       const allow = Number(e.allowance || 0);
-      const deduct = Math.round(base * (ins + tax));
-      const net = base + allow - deduct;
+      
+      // Calculate automated deductions
+      const automated = calcEmployeeDeductions({
+        employeeId: e.id,
+        baseSalary: base,
+        month,
+        attendance,
+        leaves,
+        settings: appSettings,
+      });
+
+      const fixedDeduct = Math.round(base * (ins + tax));
+      const totalDeduct = fixedDeduct + automated.total;
+      const net = base + allow - totalDeduct;
+
+      const breakdown = `تأمينات وضرائب: ${fixedDeduct} | ${automated.breakdown}`;
+
       await addItem("payroll", {
-        month, employeeId: e.id, employeeName: e.name,
-        base, allow, deduct, net, status: "بانتظار الدفع",
+        month, 
+        employeeId: e.id, 
+        employeeName: e.name,
+        base, 
+        allow, 
+        deduct: totalDeduct, 
+        net, 
+        status: "بانتظار الدفع",
+        breakdown
       });
     }
-    toast.success("تم إنشاء كشف الرواتب");
+    toast.success("تم إنشاء كشف الرواتب والتلقائي");
   };
 
   const markPaid = async (id: string) => {
@@ -69,8 +98,8 @@ function PayrollPage() {
 
   const exportCsv = () => {
     const rows = [
-      ["الشهر", "الموظف", "الأساسي", "البدلات", "الخصومات", "الصافي", "الحالة"],
-      ...slips.map((s) => [s.month, s.employeeName, s.base, s.allow, s.deduct, s.net, s.status]),
+      ["الشهر", "الموظف", "الأساسي", "البدلات", "الخصومات", "الصافي", "الحالة", "التفاصيل"],
+      ...slips.map((s) => [s.month, s.employeeName, s.base, s.allow, s.deduct, s.net, s.status, s.breakdown || ""]),
     ];
     const csv = "\uFEFF" + rows.map((r) => r.map((c) => `"${String(c ?? "")}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -82,7 +111,7 @@ function PayrollPage() {
     <div>
       <PageHeader
         title="الرواتب"
-        subtitle="كشوفات الرواتب، البدلات، الخصومات والمكافآت"
+        subtitle="كشوفات الرواتب، البدلات، الخصومات والمكافآت (مع الأتمتة)"
         actions={
           <>
             <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="rounded-md border border-input bg-background px-3 py-1.5 text-sm" dir="ltr" />
@@ -113,13 +142,14 @@ function PayrollPage() {
                 <TableHead className="text-right">البدلات</TableHead>
                 <TableHead className="text-right">الخصومات</TableHead>
                 <TableHead className="text-right">الصافي</TableHead>
+                <TableHead className="text-right">التفاصيل</TableHead>
                 <TableHead className="text-right">الحالة</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">جاري التحميل...</TableCell></TableRow>}
-              {!loading && slips.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-6">لا يوجد كشف لهذا الشهر — اضغط "إنشاء كشف الشهر"</TableCell></TableRow>}
+              {loading && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">جاري التحميل...</TableCell></TableRow>}
+              {!loading && slips.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-6">لا يوجد كشف لهذا الشهر — اضغط "إنشاء كشف الشهر"</TableCell></TableRow>}
               {slips.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.employeeName}</TableCell>
@@ -127,13 +157,14 @@ function PayrollPage() {
                   <TableCell className="text-success">+{formatEGP(s.allow)}</TableCell>
                   <TableCell className="text-destructive">-{formatEGP(s.deduct)}</TableCell>
                   <TableCell className="font-bold">{formatEGP(s.net)}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate" title={s.breakdown}>{s.breakdown}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className={s.status === "مدفوع" ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}>
                       {s.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {s.status !== "مدفوع" && <Button size="sm" variant="ghost" onClick={() => markPaid(s.id)}><FileText className="ml-1 h-4 w-4" />تسجيل دفع</Button>}
+                    {s.status !== "مدفوع" && s.id && <Button size="sm" variant="ghost" onClick={() => markPaid(s.id!)}><FileText className="ml-1 h-4 w-4" />تسجيل دفع</Button>}
                   </TableCell>
                 </TableRow>
               ))}

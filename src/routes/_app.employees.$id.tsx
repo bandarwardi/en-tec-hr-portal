@@ -61,9 +61,6 @@ interface EmployeeFull {
   emergencyContact?: string;
   emergencyPhone?: string;
   manager?: string;
-  shiftName?: string;
-  shiftStart?: string;
-  shiftEnd?: string;
   employmentType?: string; // دوام كامل / جزئي / عقد
   bankAccount?: string;
   notes?: string;
@@ -88,7 +85,7 @@ function EmployeeProfilePage() {
   if (!emp) return <Card className="p-8 text-center">الموظف غير موجود.</Card>;
 
   return (
-    <div>
+    <div dir="rtl" className="w-full">
       <PageHeader
         title={emp.name || "موظف"}
         subtitle={`${emp.code || "—"} • ${emp.role || ""} • ${emp.dept || ""}`}
@@ -99,7 +96,7 @@ function EmployeeProfilePage() {
         }
       />
 
-      <Tabs defaultValue="info">
+      <Tabs defaultValue="info" dir="rtl">
         <TabsList className="mb-4 h-auto flex-wrap gap-1 bg-muted p-1">
           <TabsTrigger value="info"><User className="ml-1 h-4 w-4" />بيانات الموظف</TabsTrigger>
           <TabsTrigger value="docs"><FileText className="ml-1 h-4 w-4" />المرفقات</TabsTrigger>
@@ -203,12 +200,6 @@ function InfoTab({
             </SelectContent>
           </Select>
         </F>
-      </Section>
-
-      <Section icon={Clock} title="بيانات الوردية">
-        <F label="اسم الوردية"><Input value={emp.shiftName || ""} onChange={(e) => set("shiftName", e.target.value)} placeholder="مثال: الوردية الصباحية" /></F>
-        <F label="بداية الدوام"><Input type="time" dir="ltr" className="text-right" value={emp.shiftStart || ""} onChange={(e) => set("shiftStart", e.target.value)} /></F>
-        <F label="نهاية الدوام"><Input type="time" dir="ltr" className="text-right" value={emp.shiftEnd || ""} onChange={(e) => set("shiftEnd", e.target.value)} /></F>
       </Section>
 
       <Section icon={Wallet} title="بيانات الراتب">

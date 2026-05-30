@@ -17,6 +17,7 @@ import {
   LogOut,
   Menu,
   UserCircle2,
+  UserCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ const NAV = [
   { to: "/payroll", label: "الرواتب", icon: Wallet },
   { to: "/recruitment", label: "التوظيف", icon: Briefcase },
   { to: "/reports", label: "التقارير", icon: FileBarChart2 },
+  { to: "/users", label: "المستخدمين", icon: UserCog },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ] as const;
 

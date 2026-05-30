@@ -9,11 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RegisterRouteImport } from './routes/register'
+import { Route as TrackRouteImport } from './routes/track'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as JobsIdRouteImport } from './routes/jobs.$id'
+import { Route as AppUsersRouteImport } from './routes/_app.users'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppRecruitmentRouteImport } from './routes/_app.recruitment'
@@ -23,11 +25,12 @@ import { Route as AppEmployeesRouteImport } from './routes/_app.employees'
 import { Route as AppDepartmentsRouteImport } from './routes/_app.departments'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppAttendanceRouteImport } from './routes/_app.attendance'
+import { Route as AppEmployeesIndexRouteImport } from './routes/_app.employees.index'
 import { Route as AppEmployeesIdRouteImport } from './routes/_app.employees.$id'
 
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
+const TrackRoute = TrackRouteImport.update({
+  id: '/track',
+  path: '/track',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -48,6 +51,16 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const JobsIdRoute = JobsIdRouteImport.update({
+  id: '/jobs/$id',
+  path: '/jobs/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppUsersRoute = AppUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
@@ -94,6 +107,11 @@ const AppAttendanceRoute = AppAttendanceRouteImport.update({
   path: '/attendance',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEmployeesIndexRoute = AppEmployeesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppEmployeesRoute,
+} as any)
 const AppEmployeesIdRoute = AppEmployeesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -104,7 +122,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
+  '/track': typeof TrackRoute
   '/attendance': typeof AppAttendanceRoute
   '/dashboard': typeof AppDashboardRoute
   '/departments': typeof AppDepartmentsRoute
@@ -114,23 +132,28 @@ export interface FileRoutesByFullPath {
   '/recruitment': typeof AppRecruitmentRoute
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
+  '/users': typeof AppUsersRoute
+  '/jobs/$id': typeof JobsIdRoute
   '/employees/$id': typeof AppEmployeesIdRoute
+  '/employees/': typeof AppEmployeesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
+  '/track': typeof TrackRoute
   '/attendance': typeof AppAttendanceRoute
   '/dashboard': typeof AppDashboardRoute
   '/departments': typeof AppDepartmentsRoute
-  '/employees': typeof AppEmployeesRouteWithChildren
   '/leaves': typeof AppLeavesRoute
   '/payroll': typeof AppPayrollRoute
   '/recruitment': typeof AppRecruitmentRoute
   '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
+  '/users': typeof AppUsersRoute
+  '/jobs/$id': typeof JobsIdRoute
   '/employees/$id': typeof AppEmployeesIdRoute
+  '/employees': typeof AppEmployeesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -138,7 +161,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
+  '/track': typeof TrackRoute
   '/_app/attendance': typeof AppAttendanceRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/departments': typeof AppDepartmentsRoute
@@ -148,7 +171,10 @@ export interface FileRoutesById {
   '/_app/recruitment': typeof AppRecruitmentRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/users': typeof AppUsersRoute
+  '/jobs/$id': typeof JobsIdRoute
   '/_app/employees/$id': typeof AppEmployeesIdRoute
+  '/_app/employees/': typeof AppEmployeesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -156,7 +182,7 @@ export interface FileRouteTypes {
     | '/'
     | '/forgot-password'
     | '/login'
-    | '/register'
+    | '/track'
     | '/attendance'
     | '/dashboard'
     | '/departments'
@@ -166,30 +192,35 @@ export interface FileRouteTypes {
     | '/recruitment'
     | '/reports'
     | '/settings'
+    | '/users'
+    | '/jobs/$id'
     | '/employees/$id'
+    | '/employees/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/forgot-password'
     | '/login'
-    | '/register'
+    | '/track'
     | '/attendance'
     | '/dashboard'
     | '/departments'
-    | '/employees'
     | '/leaves'
     | '/payroll'
     | '/recruitment'
     | '/reports'
     | '/settings'
+    | '/users'
+    | '/jobs/$id'
     | '/employees/$id'
+    | '/employees'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/forgot-password'
     | '/login'
-    | '/register'
+    | '/track'
     | '/_app/attendance'
     | '/_app/dashboard'
     | '/_app/departments'
@@ -199,7 +230,10 @@ export interface FileRouteTypes {
     | '/_app/recruitment'
     | '/_app/reports'
     | '/_app/settings'
+    | '/_app/users'
+    | '/jobs/$id'
     | '/_app/employees/$id'
+    | '/_app/employees/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -207,16 +241,17 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
-  RegisterRoute: typeof RegisterRoute
+  TrackRoute: typeof TrackRoute
+  JobsIdRoute: typeof JobsIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
+    '/track': {
+      id: '/track'
+      path: '/track'
+      fullPath: '/track'
+      preLoaderRoute: typeof TrackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -246,6 +281,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/jobs/$id': {
+      id: '/jobs/$id'
+      path: '/jobs/$id'
+      fullPath: '/jobs/$id'
+      preLoaderRoute: typeof JobsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/users': {
+      id: '/_app/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof AppUsersRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/settings': {
       id: '/_app/settings'
@@ -310,6 +359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAttendanceRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/employees/': {
+      id: '/_app/employees/'
+      path: '/'
+      fullPath: '/employees/'
+      preLoaderRoute: typeof AppEmployeesIndexRouteImport
+      parentRoute: typeof AppEmployeesRoute
+    }
     '/_app/employees/$id': {
       id: '/_app/employees/$id'
       path: '/$id'
@@ -322,10 +378,12 @@ declare module '@tanstack/react-router' {
 
 interface AppEmployeesRouteChildren {
   AppEmployeesIdRoute: typeof AppEmployeesIdRoute
+  AppEmployeesIndexRoute: typeof AppEmployeesIndexRoute
 }
 
 const AppEmployeesRouteChildren: AppEmployeesRouteChildren = {
   AppEmployeesIdRoute: AppEmployeesIdRoute,
+  AppEmployeesIndexRoute: AppEmployeesIndexRoute,
 }
 
 const AppEmployeesRouteWithChildren = AppEmployeesRoute._addFileChildren(
@@ -342,6 +400,7 @@ interface AppRouteChildren {
   AppRecruitmentRoute: typeof AppRecruitmentRoute
   AppReportsRoute: typeof AppReportsRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppUsersRoute: typeof AppUsersRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -354,6 +413,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRecruitmentRoute: AppRecruitmentRoute,
   AppReportsRoute: AppReportsRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppUsersRoute: AppUsersRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -363,8 +423,19 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
-  RegisterRoute: RegisterRoute,
+  TrackRoute: TrackRoute,
+  JobsIdRoute: JobsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
