@@ -1,0 +1,8 @@
+# Configuration for Firebase App Hosting
+# Ensures that the built server directory (.output) is preserved in the container rollout.
+
+outputFiles:
+  serverApp:
+    include:
+      - .output
+      - package.json
