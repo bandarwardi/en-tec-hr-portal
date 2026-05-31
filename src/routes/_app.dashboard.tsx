@@ -75,7 +75,7 @@ function DashboardPage() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card className="p-5 lg:col-span-2">
+        <Card className="p-5 lg:col-span-2 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-elevated)] hover:-translate-y-1">
           <h3 className="mb-4 text-base font-semibold">الحضور خلال آخر 7 أيام</h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -92,7 +92,7 @@ function DashboardPage() {
           </div>
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-5 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-elevated)] hover:-translate-y-1">
           <h3 className="mb-4 text-base font-semibold">توزيع الأقسام</h3>
           <div className="h-72">
             {deptDist.length === 0 ? (

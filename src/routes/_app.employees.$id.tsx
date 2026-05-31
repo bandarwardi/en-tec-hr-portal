@@ -27,6 +27,7 @@ import {
 import { uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
 import { formatEGP } from "@/lib/currency";
+import { PayslipModal, SlipData } from "@/components/payroll/PayslipModal";
 
 export const Route = createFileRoute("/_app/employees/$id")({
   component: EmployeeProfilePage,
@@ -103,6 +104,7 @@ function EmployeeProfilePage() {
           <TabsTrigger value="evals"><Star className="ml-1 h-4 w-4" />التقييمات</TabsTrigger>
           <TabsTrigger value="leaves"><CalendarOff className="ml-1 h-4 w-4" />الإجازات</TabsTrigger>
           <TabsTrigger value="att"><CalendarCheck className="ml-1 h-4 w-4" />الحضور والانصراف</TabsTrigger>
+          <TabsTrigger value="payroll"><Wallet className="ml-1 h-4 w-4" />الرواتب</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info">
@@ -119,6 +121,9 @@ function EmployeeProfilePage() {
         </TabsContent>
         <TabsContent value="att">
           <AttTab employeeId={id} />
+        </TabsContent>
+        <TabsContent value="payroll">
+          <PayrollTab employeeId={id} emp={emp} />
         </TabsContent>
       </Tabs>
     </div>
@@ -273,7 +278,6 @@ function DocsTab({ employeeId }: { employeeId: string }) {
           {busy ? "جاري الرفع..." : "رفع ملف"}
           <input type="file" className="hidden" onChange={(e) => upload(e.target.files?.[0] || null)} disabled={busy} />
         </label>
-        <p className="text-xs text-muted-foreground">يتم رفع الملف على API مخصص وحفظ الرابط فقط.</p>
       </div>
       <div className="overflow-x-auto">
         <Table>
@@ -312,7 +316,7 @@ function DocsTab({ employeeId }: { employeeId: string }) {
 
 /* ============== EVAL TAB ============== */
 interface Eval { date: string; period: string; score: number; kpi: string; managerNotes: string; employeeFeedback: string; reviewer: string }
-const emptyEval: Eval = { date: new Date().toISOString().slice(0,10), period: "", score: 0, kpi: "", managerNotes: "", employeeFeedback: "", reviewer: "" };
+const emptyEval: Eval = { date: new Date().toISOString().slice(0, 10), period: "", score: 0, kpi: "", managerNotes: "", employeeFeedback: "", reviewer: "" };
 function EvalsTab({ employeeId }: { employeeId: string }) {
   const path = `employees/${employeeId}/evaluations`;
   const { data: evals, loading } = useCollection<Eval>(path, [orderBy("createdAt", "desc")]);
@@ -436,7 +440,7 @@ function LeavesTab({ employeeId, employeeName }: { employeeId: string; employeeN
 function AttTab({ employeeId }: { employeeId: string }) {
   const { data: att, loading } = useCollection<any>("attendance", [orderBy("date", "desc")]);
   const mine = att.filter((a) => a.employeeId === employeeId);
-  const [month, setMonth] = useState(new Date().toISOString().slice(0,7));
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const monthRecs = mine.filter((r) => r.date?.startsWith(month));
   const lateCount = monthRecs.filter((r) => r.lateFlag || r.status === "متأخر").length;
   const otCount = monthRecs.filter((r) => r.overtimeMinutes && r.overtimeMinutes > 0).length;
@@ -482,6 +486,67 @@ function AttTab({ employeeId }: { employeeId: string }) {
         </div>
       </Card>
     </div>
+  );
+}
+
+/* ============== PAYROLL TAB ============== */
+function PayrollTab({ employeeId, emp }: { employeeId: string; emp: any }) {
+  const { data: slips, loading } = useCollection<SlipData>("payroll", [orderBy("month", "desc")]);
+  const empSlips = slips.filter((s) => s.employeeId === employeeId);
+  const [selectedSlip, setSelectedSlip] = useState<SlipData | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  return (
+    <Card className="p-5">
+      <div className="mb-4 flex items-center gap-2">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10 text-accent">
+          <Wallet className="h-4 w-4" />
+        </div>
+        <h3 className="text-sm font-semibold">تاريخ الرواتب والمفردات</h3>
+      </div>
+
+      <div className="overflow-x-auto rounded-md border">
+        <Table>
+          <TableHeader className="bg-muted/50">
+            <TableRow>
+              <TableHead className="text-right">الشهر</TableHead>
+              <TableHead className="text-right">الراتب الأساسي</TableHead>
+              <TableHead className="text-right">البدلات</TableHead>
+              <TableHead className="text-right">الخصومات</TableHead>
+              <TableHead className="text-right">الصافي</TableHead>
+              <TableHead className="text-right">الحالة</TableHead>
+              <TableHead></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading && <TableRow><TableCell colSpan={7} className="text-center py-6 text-muted-foreground">جاري التحميل...</TableCell></TableRow>}
+            {!loading && empSlips.length === 0 && <TableRow><TableCell colSpan={7} className="py-6 text-center text-muted-foreground">لا توجد كشوفات راتب مسجلة.</TableCell></TableRow>}
+            {empSlips.map((s) => (
+              <TableRow key={s.id}>
+                <TableCell className="font-medium">{s.month}</TableCell>
+                <TableCell>{formatEGP(s.base)}</TableCell>
+                <TableCell className="text-success">+{formatEGP(s.allow)}</TableCell>
+                <TableCell className="text-destructive">-{formatEGP(s.deduct)}</TableCell>
+                <TableCell className="font-bold">{formatEGP(s.net)}</TableCell>
+                <TableCell>
+                  <Badge variant="outline" className={s.status === "مدفوع" ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}>
+                    {s.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Button size="sm" variant="ghost" onClick={() => { setSelectedSlip(s); setModalOpen(true); }}>
+                    <FileText className="ml-1 h-4 w-4" />
+                    عرض الكشف
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <PayslipModal open={modalOpen} setOpen={setModalOpen} slip={selectedSlip} employee={emp} />
+    </Card>
   );
 }
 

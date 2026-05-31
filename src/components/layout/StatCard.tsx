@@ -20,7 +20,7 @@ const TONES: Record<NonNullable<Props["tone"]>, string> = {
 
 export function StatCard({ title, value, hint, icon: Icon, tone = "accent" }: Props) {
   return (
-    <Card className="p-5 shadow-[var(--shadow-card)] transition-all hover:shadow-[var(--shadow-elevated)]">
+    <Card className="p-5 shadow-[var(--shadow-card)] transition-all duration-300 hover:shadow-[var(--shadow-elevated)] hover:-translate-y-1">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm text-muted-foreground">{title}</p>

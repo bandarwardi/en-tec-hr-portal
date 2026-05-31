@@ -202,13 +202,14 @@ function LeavesPage() {
                   </TableCell>
                   <TableCell>
                     {(r.type === "بدون راتب" || r.isPermission) ? (
-                      <Input 
-                        type="number" 
-                        defaultValue={r.deductionAmount || ""} 
-                        onBlur={(e) => updateDeduction(r.id!, e.target.value)}
-                        className="h-8 w-20 px-2 text-right text-xs" 
-                        placeholder="تلقائي"
-                      />
+                        <Input 
+                          type="number" 
+                          defaultValue={r.deductionAmount || ""} 
+                          onBlur={(e) => updateDeduction(r.id!, e.target.value)}
+                          className="h-8 w-24 px-2 text-right text-xs" 
+                          placeholder="مع الراتب"
+                          title="اتركه فارغاً ليقوم النظام بحسابه تلقائياً وقت الراتب. أدخل رقماً هنا فقط إذا أردت خصم مبلغ ثابت."
+                        />
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}

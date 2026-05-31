@@ -85,7 +85,6 @@ function LoginPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password" className="text-xs uppercase tracking-wider text-muted-foreground font-bold">كلمة المرور</Label>
-              <Link to="/forgot-password" className="text-xs text-primary hover:underline font-medium transition-colors">نسيت كلمة المرور؟</Link>
             </div>
             <div className="relative">
               <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

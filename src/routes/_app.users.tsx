@@ -21,9 +21,9 @@ export const Route = createFileRoute("/_app/users")({
   component: UsersPage,
 });
 
-interface AppUser { id?: string; name: string; email: string; role: string; status: string; }
+interface AppUser { id?: string; name: string; email: string; password?: string; role: string; status: string; }
 
-const emptyUser: AppUser = { name: "", email: "", role: "موظف", status: "نشط" };
+const emptyUser: AppUser = { name: "", email: "", password: "", role: "موظف", status: "نشط" };
 
 function UsersPage() {
   const { data: usersList, loading } = useCollection<AppUser>("app_users");
@@ -33,16 +33,19 @@ function UsersPage() {
 
   const save = async () => {
     if (!editing.data.name || !editing.data.email) return toast.error("الاسم والبريد الإلكتروني مطلوبان");
+    if (!editing.id && !editing.data.password) return toast.error("كلمة المرور مطلوبة للمستخدم الجديد");
     
-    // Note: This only creates a record in Firestore. 
-    // Actual Firebase Auth creation requires Admin SDK or Cloud Functions.
     if (editing.id) {
-      await updateItem("app_users", editing.id, editing.data);
+      const oldUser = usersList.find((u) => u.id === editing.id);
+      const updateData = { ...editing.data };
+      if (!updateData.password && oldUser) {
+        updateData.password = oldUser.password || "";
+      }
+      await updateItem("app_users", editing.id, updateData);
     } else {
       await addItem("app_users", editing.data);
-      toast.info("تم إضافة المستخدم لقاعدة البيانات. (ملاحظة: لإنشاء حساب تسجيل الدخول، يجب استخدام واجهة Firebase أو Cloud Functions)");
     }
-    toast.success("تم الحفظ");
+    toast.success("تم الحفظ بنجاح ويمكن للمستخدم تسجيل الدخول الآن");
     setOpen(false);
     setEditing({ data: emptyUser });
   };
@@ -66,6 +69,10 @@ function UsersPage() {
                   <Label>البريد الإلكتروني</Label>
                   <Input type="email" dir="ltr" className="text-right" value={editing.data.email} onChange={(e) => setEditing((s) => ({ ...s, data: { ...s.data, email: e.target.value } }))} />
                 </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>كلمة المرور</Label>
+                  <Input type="text" className="text-right font-mono" value={editing.data.password || ""} onChange={(e) => setEditing((s) => ({ ...s, data: { ...s.data, password: e.target.value } }))} placeholder={editing.id ? "اتركها فارغة للمحافظة على نفس كلمة المرور" : "أدخل كلمة المرور الخاصة بالدخول"} />
+                </div>
                 <div className="space-y-2">
                   <Label>الصلاحية (الدور)</Label>
                   <Select value={editing.data.role} onValueChange={(v) => setEditing((s) => ({ ...s, data: { ...s.data, role: v } }))}>
@@ -88,13 +95,6 @@ function UsersPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                
-                {!editing.id && (
-                  <div className="sm:col-span-2 bg-accent/10 text-accent p-3 rounded-md text-xs mt-2 border border-accent/20">
-                    <span className="font-bold">ملاحظة:</span> إنشاء المستخدم هنا يضيفه فقط لقاعدة البيانات كصلاحيات. 
-                    في بيئة الإنتاج الفعلية، سيقوم النظام تلقائياً بإنشاء حساب Firebase Auth موازي وإرسال كلمة المرور.
-                  </div>
-                )}
               </div>
               <DialogFooter className="mt-6">
                 <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>

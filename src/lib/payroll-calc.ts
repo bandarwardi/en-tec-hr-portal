@@ -23,6 +23,36 @@ export interface LeaveRec {
   isPermission?: boolean;
 }
 
+/** Calculates late minutes supporting midnight crossing shifts (workStart > workEnd). */
+export function getLateMinutes(workStart: string, workEnd: string, checkIn: string): number {
+  if (!workStart || !checkIn) return 0;
+  const [sh, sm] = workStart.split(":").map(Number);
+  const [eh, em] = (workEnd || "17:00").split(":").map(Number);
+  const [ch, cm] = checkIn.split(":").map(Number);
+  if ([sh, sm, eh, em, ch, cm].some(Number.isNaN)) return 0;
+
+  const startMins = sh * 60 + sm;
+  const endMins = eh * 60 + em;
+  const checkMins = ch * 60 + cm;
+
+  // Case 1: Midnight crossing (e.g. 22:00 to 07:00)
+  if (startMins > endMins) {
+    if (checkMins >= startMins) {
+      return checkMins - startMins;
+    }
+    if (checkMins <= endMins) {
+      return (1440 - startMins) + checkMins;
+    }
+    return 0;
+  }
+
+  // Case 2: Normal shift (e.g. 09:00 to 17:00)
+  if (checkMins > startMins) {
+    return checkMins - startMins;
+  }
+  return 0;
+}
+
 /** Minutes between two HH:MM strings (b - a). Returns 0 if invalid or negative. */
 export function minutesBetween(a: string, b: string): number {
   if (!a || !b) return 0;
@@ -32,6 +62,7 @@ export function minutesBetween(a: string, b: string): number {
   const diff = bh * 60 + bm - (ah * 60 + am);
   return diff > 0 ? diff : 0;
 }
+
 
 function inMonth(date: string, month: string): boolean {
   return date?.slice(0, 7) === month;
@@ -72,21 +103,40 @@ export function calcEmployeeDeductions(opts: {
 }): EmployeeMonthDeductions {
   const { employeeId, baseSalary, month, attendance, leaves, settings } = opts;
 
+  // --- Approved leaves (this month) ---
+  const approved = leaves.filter(
+    (l) => l.employeeId === employeeId && l.status === "موافق عليها",
+  );
+
+  const leaveDaysSet = new Set<string>();
+  for (const l of approved) {
+    if (l.isPermission) continue;
+    const ds = expandDates(l.from, l.to).filter((d) => inMonth(d, month));
+    ds.forEach((d) => leaveDaysSet.add(d));
+  }
+
   // --- Late ---
   const empAtt = attendance.filter((a) => a.employeeId === employeeId && inMonth(a.date, month));
   let lateMinutes = 0;
   for (const a of empAtt) {
     if (!a.checkIn) continue;
-    const late = minutesBetween(settings.workStart, a.checkIn);
+    
+    // Skip late calculation if day is fully covered by an approved leave
+    if (leaveDaysSet.has(a.date)) continue;
+    
+    let effectiveStart = settings.workStart;
+    const perm = approved.find(l => l.isPermission && l.from === a.date);
+    if (perm && perm.startTime && perm.endTime) {
+      if (perm.startTime <= settings.workStart) {
+        effectiveStart = perm.endTime;
+      }
+    }
+    
+    const late = getLateMinutes(effectiveStart, settings.workEnd, a.checkIn);
     const beyondGrace = late - (settings.lateMinutes || 0);
     if (beyondGrace > 0) lateMinutes += beyondGrace;
   }
   const lateDeduction = Math.round(lateMinutes * (settings.lateDeductionPerMinute || 0));
-
-  // --- Approved leaves (this month) ---
-  const approved = leaves.filter(
-    (l) => l.employeeId === employeeId && l.status === "موافق عليها",
-  );
 
   // Per-day rate for unpaid leave & absence
   const dayRate = settings.unpaidLeavePerDay && settings.unpaidLeavePerDay > 0
@@ -128,12 +178,6 @@ export function calcEmployeeDeductions(opts: {
   // --- Absence: working days in month minus attended minus approved leave days ---
   const totalWorking = workingDaysInMonth(month);
   const attendedDates = new Set(empAtt.map((a) => a.date));
-  const leaveDaysSet = new Set<string>();
-  for (const l of approved) {
-    if (l.isPermission) continue;
-    const ds = expandDates(l.from, l.to).filter((d) => inMonth(d, month));
-    ds.forEach((d) => leaveDaysSet.add(d));
-  }
   const consideredDays = new Set<string>([...attendedDates, ...leaveDaysSet]);
   // Count working days in month that are not covered
   const [y, mm] = month.split("-").map(Number);
@@ -175,13 +219,13 @@ export function calcEmployeeDeductions(opts: {
 function expandDates(from: string, to: string): string[] {
   if (!from || !to) return [];
   const out: string[] = [];
-  const start = new Date(from);
-  const end = new Date(to);
+  const start = new Date(from + "T00:00:00Z");
+  const end = new Date(to + "T00:00:00Z");
   if (isNaN(+start) || isNaN(+end)) return [];
   const d = new Date(start);
   while (d <= end) {
     out.push(d.toISOString().slice(0, 10));
-    d.setDate(d.getDate() + 1);
+    d.setUTCDate(d.getUTCDate() + 1);
   }
   return out;
 }

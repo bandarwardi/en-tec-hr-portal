@@ -11,9 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PayrollPrintIdRouteImport } from './routes/payroll-print.$id'
 import { Route as JobsIdRouteImport } from './routes/jobs.$id'
 import { Route as AppUsersRouteImport } from './routes/_app.users'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
@@ -25,6 +25,7 @@ import { Route as AppEmployeesRouteImport } from './routes/_app.employees'
 import { Route as AppDepartmentsRouteImport } from './routes/_app.departments'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppAttendanceRouteImport } from './routes/_app.attendance'
+import { Route as AppAdjustmentsRouteImport } from './routes/_app.adjustments'
 import { Route as AppEmployeesIndexRouteImport } from './routes/_app.employees.index'
 import { Route as AppEmployeesIdRouteImport } from './routes/_app.employees.$id'
 
@@ -38,11 +39,6 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -50,6 +46,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayrollPrintIdRoute = PayrollPrintIdRouteImport.update({
+  id: '/payroll-print/$id',
+  path: '/payroll-print/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JobsIdRoute = JobsIdRouteImport.update({
@@ -107,6 +108,11 @@ const AppAttendanceRoute = AppAttendanceRouteImport.update({
   path: '/attendance',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdjustmentsRoute = AppAdjustmentsRouteImport.update({
+  id: '/adjustments',
+  path: '/adjustments',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEmployeesIndexRoute = AppEmployeesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -120,9 +126,9 @@ const AppEmployeesIdRoute = AppEmployeesIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/track': typeof TrackRoute
+  '/adjustments': typeof AppAdjustmentsRoute
   '/attendance': typeof AppAttendanceRoute
   '/dashboard': typeof AppDashboardRoute
   '/departments': typeof AppDepartmentsRoute
@@ -134,14 +140,15 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/users': typeof AppUsersRoute
   '/jobs/$id': typeof JobsIdRoute
+  '/payroll-print/$id': typeof PayrollPrintIdRoute
   '/employees/$id': typeof AppEmployeesIdRoute
   '/employees/': typeof AppEmployeesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/track': typeof TrackRoute
+  '/adjustments': typeof AppAdjustmentsRoute
   '/attendance': typeof AppAttendanceRoute
   '/dashboard': typeof AppDashboardRoute
   '/departments': typeof AppDepartmentsRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/users': typeof AppUsersRoute
   '/jobs/$id': typeof JobsIdRoute
+  '/payroll-print/$id': typeof PayrollPrintIdRoute
   '/employees/$id': typeof AppEmployeesIdRoute
   '/employees': typeof AppEmployeesIndexRoute
 }
@@ -159,9 +167,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
-  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/track': typeof TrackRoute
+  '/_app/adjustments': typeof AppAdjustmentsRoute
   '/_app/attendance': typeof AppAttendanceRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/departments': typeof AppDepartmentsRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/users': typeof AppUsersRoute
   '/jobs/$id': typeof JobsIdRoute
+  '/payroll-print/$id': typeof PayrollPrintIdRoute
   '/_app/employees/$id': typeof AppEmployeesIdRoute
   '/_app/employees/': typeof AppEmployeesIndexRoute
 }
@@ -180,9 +189,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/forgot-password'
     | '/login'
     | '/track'
+    | '/adjustments'
     | '/attendance'
     | '/dashboard'
     | '/departments'
@@ -194,14 +203,15 @@ export interface FileRouteTypes {
     | '/settings'
     | '/users'
     | '/jobs/$id'
+    | '/payroll-print/$id'
     | '/employees/$id'
     | '/employees/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/forgot-password'
     | '/login'
     | '/track'
+    | '/adjustments'
     | '/attendance'
     | '/dashboard'
     | '/departments'
@@ -212,15 +222,16 @@ export interface FileRouteTypes {
     | '/settings'
     | '/users'
     | '/jobs/$id'
+    | '/payroll-print/$id'
     | '/employees/$id'
     | '/employees'
   id:
     | '__root__'
     | '/'
     | '/_app'
-    | '/forgot-password'
     | '/login'
     | '/track'
+    | '/_app/adjustments'
     | '/_app/attendance'
     | '/_app/dashboard'
     | '/_app/departments'
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/users'
     | '/jobs/$id'
+    | '/payroll-print/$id'
     | '/_app/employees/$id'
     | '/_app/employees/'
   fileRoutesById: FileRoutesById
@@ -239,10 +251,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
-  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   TrackRoute: typeof TrackRoute
   JobsIdRoute: typeof JobsIdRoute
+  PayrollPrintIdRoute: typeof PayrollPrintIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -261,13 +273,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_app': {
       id: '/_app'
       path: ''
@@ -280,6 +285,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payroll-print/$id': {
+      id: '/payroll-print/$id'
+      path: '/payroll-print/$id'
+      fullPath: '/payroll-print/$id'
+      preLoaderRoute: typeof PayrollPrintIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/jobs/$id': {
@@ -359,6 +371,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAttendanceRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/adjustments': {
+      id: '/_app/adjustments'
+      path: '/adjustments'
+      fullPath: '/adjustments'
+      preLoaderRoute: typeof AppAdjustmentsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/employees/': {
       id: '/_app/employees/'
       path: '/'
@@ -391,6 +410,7 @@ const AppEmployeesRouteWithChildren = AppEmployeesRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAdjustmentsRoute: typeof AppAdjustmentsRoute
   AppAttendanceRoute: typeof AppAttendanceRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDepartmentsRoute: typeof AppDepartmentsRoute
@@ -404,6 +424,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdjustmentsRoute: AppAdjustmentsRoute,
   AppAttendanceRoute: AppAttendanceRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDepartmentsRoute: AppDepartmentsRoute,
@@ -421,10 +442,10 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
-  ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   TrackRoute: TrackRoute,
   JobsIdRoute: JobsIdRoute,
+  PayrollPrintIdRoute: PayrollPrintIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

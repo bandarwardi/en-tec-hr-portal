@@ -7,10 +7,10 @@ import {
   CalendarCheck,
   CalendarOff,
   Wallet,
+  Coins,
   Briefcase,
   FileBarChart2,
   Settings,
-  Bell,
   Search,
   Moon,
   Sun,
@@ -32,6 +32,7 @@ const NAV = [
   { to: "/attendance", label: "الحضور", icon: CalendarCheck },
   { to: "/leaves", label: "الإجازات", icon: CalendarOff },
   { to: "/payroll", label: "الرواتب", icon: Wallet },
+  { to: "/adjustments", label: "العلاوات والخصومات", icon: Coins },
   { to: "/recruitment", label: "التوظيف", icon: Briefcase },
   { to: "/reports", label: "التقارير", icon: FileBarChart2 },
   { to: "/users", label: "المستخدمين", icon: UserCog },
@@ -57,7 +58,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <div className="flex min-h-screen bg-background text-foreground relative overflow-hidden">
+      {/* Dynamic Background Gradients */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-[10%] -top-[10%] h-[40%] w-[40%] rounded-full bg-primary/10 blur-[100px]" />
+        <div className="absolute -right-[5%] top-[20%] h-[30%] w-[30%] rounded-full bg-accent/20 blur-[100px]" />
+        <div className="absolute bottom-[-10%] right-[10%] h-[40%] w-[40%] rounded-full bg-primary/5 blur-[120px]" />
+      </div>
       {/* Sidebar */}
       <aside
         className={cn(
@@ -84,10 +91,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to={item.to}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-300",
                   active
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:translate-x-[-4px]",
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -99,7 +106,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="absolute inset-x-0 bottom-0 border-t border-sidebar-border p-3">
           <button
             onClick={onLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/80 transition-all duration-300 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:translate-x-[-4px]"
           >
             <LogOut className="h-4 w-4" />
             تسجيل الخروج
@@ -117,7 +124,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur sm:px-6">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/50 bg-card/60 px-4 backdrop-blur-md shadow-sm sm:px-6 transition-all duration-300">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
@@ -129,9 +136,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Button variant="ghost" size="icon" onClick={toggleDark} aria-label="تبديل الوضع">
               {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
-            <Button variant="ghost" size="icon" aria-label="الإشعارات">
-              <Bell className="h-5 w-5" />
-            </Button>
             <div className="flex items-center gap-2 rounded-full border border-border bg-background px-2 py-1">
               <UserCircle2 className="h-6 w-6 text-muted-foreground" />
               <span className="hidden text-xs text-foreground sm:inline">
@@ -140,7 +144,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="relative z-10 flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );
