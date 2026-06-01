@@ -14,7 +14,7 @@ const TONES: Record<NonNullable<Props["tone"]>, string> = {
   primary: "bg-primary/10 text-primary",
   success: "bg-success/10 text-success",
   warning: "bg-warning/15 text-warning",
-  accent: "bg-accent/10 text-accent",
+  accent: "bg-accent text-accent-foreground",
   destructive: "bg-destructive/10 text-destructive",
 };
 

@@ -174,7 +174,7 @@ function PayrollPage() {
       <Card className="mt-6 overflow-hidden">
         <div className="flex items-center justify-between border-b border-border p-4">
           <h3 className="text-base font-semibold">كشف الرواتب — {month}</h3>
-          <Badge variant="outline" className="bg-accent/10 text-accent">{CURRENCY_LABEL}</Badge>
+          <Badge variant="outline" className="bg-accent text-accent-foreground">{CURRENCY_LABEL}</Badge>
         </div>
         <div className="overflow-x-auto">
           <Table>

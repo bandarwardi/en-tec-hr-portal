@@ -271,10 +271,10 @@ export function PayslipModal({
           {/* Net Salary Highlight */}
           <div className="mt-6 bg-accent/10 border border-accent/20 p-6 rounded-xl flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-bold text-accent">صافي الراتب (Net Salary)</h3>
-              <p className="text-sm text-accent/80 mt-1">ما يستحقه الموظف لهذا الشهر</p>
+              <h3 className="text-xl font-bold text-accent-foreground">صافي الراتب (Net Salary)</h3>
+              <p className="text-sm text-accent-foreground/80 mt-1">ما يستحقه الموظف لهذا الشهر</p>
             </div>
-            <div className="text-3xl font-black text-accent tracking-tight">
+            <div className="text-3xl font-black text-accent-foreground tracking-tight">
               {formatEGP(slip.net)}
             </div>
           </div>

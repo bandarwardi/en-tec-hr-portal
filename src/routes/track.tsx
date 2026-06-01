@@ -149,7 +149,7 @@ function TrackPage() {
                               href={result.interviewMapLink} 
                               target="_blank" 
                               rel="noreferrer"
-                              className="inline-flex items-center gap-2 text-xs font-bold text-accent hover:underline bg-background border px-3 py-2 rounded-lg shadow-sm w-full justify-center"
+                              className="inline-flex items-center gap-2 text-xs font-bold text-accent-foreground hover:underline bg-background border px-3 py-2 rounded-lg shadow-sm w-full justify-center"
                             >
                               <MapPin className="h-4 w-4 text-warning" />
                               <span>عرض موقع المقابلة على خرائط جوجل</span>

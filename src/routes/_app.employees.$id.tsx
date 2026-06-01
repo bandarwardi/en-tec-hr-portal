@@ -234,7 +234,7 @@ function Section({ icon: Icon, title, children }: { icon: any; title: string; ch
   return (
     <Card className="p-5">
       <div className="mb-4 flex items-center gap-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10 text-accent"><Icon className="h-4 w-4" /></div>
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-accent-foreground"><Icon className="h-4 w-4" /></div>
         <h3 className="text-sm font-semibold">{title}</h3>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{children}</div>
@@ -293,7 +293,7 @@ function DocsTab({ employeeId }: { employeeId: string }) {
             {!loading && docs.length === 0 && <TableRow><TableCell colSpan={3} className="py-6 text-center text-muted-foreground">لا توجد مرفقات</TableCell></TableRow>}
             {docs.map((d) => (
               <TableRow key={d.id}>
-                <TableCell><Badge variant="outline" className="bg-accent/10 text-accent">{d.type}</Badge></TableCell>
+                <TableCell><Badge variant="outline" className="bg-accent text-accent-foreground">{d.type}</Badge></TableCell>
                 <TableCell className="font-medium">{d.name}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
@@ -336,7 +336,7 @@ function EvalsTab({ employeeId }: { employeeId: string }) {
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="p-5"><p className="text-sm text-muted-foreground">عدد التقييمات</p><p className="mt-2 text-3xl font-bold">{evals.length}</p></Card>
-        <Card className="p-5"><p className="text-sm text-muted-foreground">متوسط الأداء</p><p className="mt-2 text-3xl font-bold text-accent">{avg}%</p></Card>
+        <Card className="p-5"><p className="text-sm text-muted-foreground">متوسط الأداء</p><p className="mt-2 text-3xl font-bold text-accent-foreground">{avg}%</p></Card>
         <Card className="p-5 flex items-center justify-center">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button><Plus className="ml-2 h-4 w-4" />تقييم جديد</Button></DialogTrigger>
@@ -368,10 +368,10 @@ function EvalsTab({ employeeId }: { employeeId: string }) {
             <div key={e.id} className="rounded-lg border border-border p-4">
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-accent/10 text-accent">{e.period}</Badge>
+                  <Badge variant="outline" className="bg-accent text-accent-foreground">{e.period}</Badge>
                   <span className="text-xs text-muted-foreground" dir="ltr">{e.date}</span>
                 </div>
-                <div className="text-2xl font-bold text-accent">{e.score}%</div>
+                <div className="text-2xl font-bold text-accent-foreground">{e.score}%</div>
               </div>
               {e.kpi && <p className="text-sm"><b>KPI:</b> {e.kpi}</p>}
               {e.managerNotes && <p className="mt-1 text-sm"><b>المدير:</b> {e.managerNotes}</p>}
@@ -399,7 +399,7 @@ function LeavesTab({ employeeId, employeeName }: { employeeId: string; employeeN
         <Card className="p-5"><p className="text-sm text-muted-foreground">إجمالي الطلبات</p><p className="mt-2 text-3xl font-bold">{mine.length}</p></Card>
         <Card className="p-5"><p className="text-sm text-muted-foreground">موافق عليها</p><p className="mt-2 text-3xl font-bold text-success">{mine.filter((l) => l.status === "موافق عليها").length}</p></Card>
         <Card className="p-5"><p className="text-sm text-muted-foreground">بانتظار</p><p className="mt-2 text-3xl font-bold text-warning">{mine.filter((l) => l.status === "بانتظار الموافقة").length}</p></Card>
-        <Card className="p-5"><p className="text-sm text-muted-foreground">رصيد سنوي متبقي</p><p className="mt-2 text-3xl font-bold text-accent">{balance} يوم</p></Card>
+        <Card className="p-5"><p className="text-sm text-muted-foreground">رصيد سنوي متبقي</p><p className="mt-2 text-3xl font-bold text-accent-foreground">{balance} يوم</p></Card>
       </div>
       <Card className="overflow-hidden">
         <div className="border-b border-border p-4"><h3 className="text-sm font-semibold">سجل الإجازات والأذونات</h3></div>
@@ -451,7 +451,7 @@ function AttTab({ employeeId }: { employeeId: string }) {
         <Card className="p-5"><p className="text-sm text-muted-foreground">إجمالي السجلات</p><p className="mt-2 text-3xl font-bold">{mine.length}</p></Card>
         <Card className="p-5"><p className="text-sm text-muted-foreground">حضور الشهر</p><p className="mt-2 text-3xl font-bold text-success">{monthRecs.length}</p></Card>
         <Card className="p-5"><p className="text-sm text-muted-foreground">تأخير الشهر</p><p className="mt-2 text-3xl font-bold text-warning">{lateCount}</p></Card>
-        <Card className="p-5"><p className="text-sm text-muted-foreground">أيام إضافية</p><p className="mt-2 text-3xl font-bold text-accent">{otCount}</p></Card>
+        <Card className="p-5"><p className="text-sm text-muted-foreground">أيام إضافية</p><p className="mt-2 text-3xl font-bold text-accent-foreground">{otCount}</p></Card>
       </div>
       <Card className="overflow-hidden">
         <div className="flex items-center justify-between border-b border-border p-4">
@@ -499,7 +499,7 @@ function PayrollTab({ employeeId, emp }: { employeeId: string; emp: any }) {
   return (
     <Card className="p-5">
       <div className="mb-4 flex items-center gap-2">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/10 text-accent">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-accent-foreground">
           <Wallet className="h-4 w-4" />
         </div>
         <h3 className="text-sm font-semibold">تاريخ الرواتب والمفردات</h3>

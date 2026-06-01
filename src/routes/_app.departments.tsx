@@ -76,7 +76,7 @@ function DepartmentsPage() {
         {depts.map((d) => (
           <Card key={d.id} className="p-5 transition-all hover:shadow-[var(--shadow-elevated)]">
             <div className="mb-4 flex items-center justify-between">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-accent-foreground">
                 <Users className="h-5 w-5" />
               </div>
               <div className="flex gap-1">

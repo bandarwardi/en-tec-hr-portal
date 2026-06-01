@@ -249,7 +249,7 @@ function RecruitmentPage() {
             {jobs.map((j) => (
               <Card key={j.id} className="p-5 transition-all hover:shadow-lg flex flex-col h-full border border-border/60">
                 <div className="mb-3 flex items-center justify-between">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent"><Briefcase className="h-5 w-5" /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground"><Briefcase className="h-5 w-5" /></div>
                   <div className="flex gap-1">
                     <Button variant="ghost" size="icon" onClick={() => copyLink(j.id!)} title="نسخ رابط التقديم"><LinkIcon className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => { setEditingJob({ id: j.id, data: j as Job }); setOpenJobDialog(true); }}><Pencil className="h-4 w-4" /></Button>
@@ -340,7 +340,7 @@ function RecruitmentPage() {
                             <div className="text-xs text-muted-foreground">{app.email}</div>
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium text-accent">{app.jobTitle}</TableCell>
+                        <TableCell className="font-medium text-accent-foreground">{app.jobTitle}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{app.date}</TableCell>
                         <TableCell className="max-w-[150px] truncate text-xs" title={app.qualification}>{app.qualification}</TableCell>
                         <TableCell>{getStatusBadge(app.status)}</TableCell>
@@ -349,7 +349,7 @@ function RecruitmentPage() {
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              className="text-accent hover:text-accent/90"
+                              className="text-accent-foreground hover:text-accent-foreground/90"
                               onClick={() => openApplicantDetails(app)}
                             >
                               <Eye className="h-4 w-4 ml-1" />
@@ -382,7 +382,7 @@ function RecruitmentPage() {
             <>
               <DialogHeader>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-accent/10 rounded-lg text-accent"><Users className="h-5 w-5" /></div>
+                  <div className="p-2 bg-accent rounded-lg text-accent-foreground"><Users className="h-5 w-5" /></div>
                   <div>
                     <DialogTitle>مراجعة طلب التوظيف: {selectedApplicant.name}</DialogTitle>
                     <p className="text-xs text-muted-foreground">رقم تتبع الطلب: {selectedApplicant.applicationNumber} • مقدم في {selectedApplicant.date}</p>
@@ -394,12 +394,12 @@ function RecruitmentPage() {
                 
                 {/* Details Section */}
                 <Card className="p-4 space-y-3 border border-border/40 bg-muted/20">
-                  <h4 className="font-bold text-sm border-b pb-1.5 flex items-center gap-2"><Users className="h-4 w-4 text-accent" /> البيانات الشخصية والتعليمية</h4>
+                  <h4 className="font-bold text-sm border-b pb-1.5 flex items-center gap-2"><Users className="h-4 w-4 text-accent-foreground" /> البيانات الشخصية والتعليمية</h4>
                   <div className="space-y-2 text-sm">
                     <div><span className="text-muted-foreground font-medium">البريد الإلكتروني: </span><span dir="ltr" className="font-semibold">{selectedApplicant.email}</span></div>
                     <div><span className="text-muted-foreground font-medium">رقم الهاتف: </span><span dir="ltr" className="font-semibold">{selectedApplicant.phone}</span></div>
                     <div><span className="text-muted-foreground font-medium">تاريخ الميلاد: </span><span className="font-semibold">{selectedApplicant.birthDate}</span></div>
-                    <div><span className="text-muted-foreground font-medium">الوظيفة المتقدم لها: </span><span className="font-bold text-accent">{selectedApplicant.jobTitle}</span></div>
+                    <div><span className="text-muted-foreground font-medium">الوظيفة المتقدم لها: </span><span className="font-bold text-accent-foreground">{selectedApplicant.jobTitle}</span></div>
                     <div><span className="text-muted-foreground font-medium">المؤهل الدراسي: </span><span className="font-semibold">{selectedApplicant.qualification}</span></div>
                     <div><span className="text-muted-foreground font-medium">الموقف من التجنيد: </span><span className="font-semibold">{selectedApplicant.militaryStatus}</span></div>
                   </div>
@@ -407,7 +407,7 @@ function RecruitmentPage() {
 
                 {/* Experience section */}
                 <Card className="p-4 space-y-3 border border-border/40 bg-muted/20">
-                  <h4 className="font-bold text-sm border-b pb-1.5 flex items-center gap-2"><Briefcase className="h-4 w-4 text-accent" /> الخبرات والملفات المرفقة</h4>
+                  <h4 className="font-bold text-sm border-b pb-1.5 flex items-center gap-2"><Briefcase className="h-4 w-4 text-accent-foreground" /> الخبرات والملفات المرفقة</h4>
                   <div className="space-y-3">
                     <div>
                       <span className="text-xs text-muted-foreground block mb-1">الخبرات السابقة المكتوبة:</span>
@@ -416,7 +416,7 @@ function RecruitmentPage() {
                     <div>
                       <span className="text-xs text-muted-foreground block mb-1">السيرة الذاتية المرفقة:</span>
                       {selectedApplicant.cvUrl ? (
-                        <a href={selectedApplicant.cvUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-xs font-bold text-accent hover:underline bg-background border px-3 py-2 rounded-lg shadow-sm w-full justify-center">
+                        <a href={selectedApplicant.cvUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-xs font-bold text-accent-foreground hover:underline bg-background border px-3 py-2 rounded-lg shadow-sm w-full justify-center">
                           <FileText className="h-4 w-4" />
                           <span>فتح وتحميل السيرة الذاتية (CV)</span>
                           <ExternalLink className="h-3.5 w-3.5" />
@@ -430,7 +430,7 @@ function RecruitmentPage() {
 
                 {/* Status and Action section */}
                 <Card className="p-4 md:col-span-2 space-y-4 border border-border/40">
-                  <h4 className="font-bold text-sm border-b pb-1.5 flex items-center gap-2"><Clock className="h-4 w-4 text-accent" /> اتخاذ قرار بشأن الطلب</h4>
+                  <h4 className="font-bold text-sm border-b pb-1.5 flex items-center gap-2"><Clock className="h-4 w-4 text-accent-foreground" /> اتخاذ قرار بشأن الطلب</h4>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     

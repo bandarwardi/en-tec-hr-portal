@@ -185,7 +185,7 @@ function EmployeesPage() {
                 <TableRow key={e.id}>
                   <TableCell className="font-mono text-xs text-muted-foreground">{e.code}</TableCell>
                   <TableCell className="font-medium">
-                    <Link to="/employees/$id" params={{ id: e.id }} className="hover:text-accent hover:underline inline-flex items-center gap-1">
+                    <Link to="/employees/$id" params={{ id: e.id }} className="hover:text-accent-foreground hover:underline inline-flex items-center gap-1">
                       {e.name}
                       <ExternalLink className="h-3 w-3 opacity-60" />
                     </Link>

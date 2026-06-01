@@ -23,7 +23,7 @@ export function RichTextEditor({ value, onChange, placeholder, className, minHei
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-accent underline" } }),
+      Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-accent-foreground underline" } }),
       Image,
       Placeholder.configure({ placeholder: placeholder || "اكتب هنا..." }),
     ],
@@ -36,7 +36,7 @@ export function RichTextEditor({ value, onChange, placeholder, className, minHei
           "[&_h1]:text-2xl [&_h1]:font-bold [&_h2]:text-xl [&_h2]:font-bold [&_h3]:text-lg [&_h3]:font-semibold",
           "[&_ul]:list-disc [&_ul]:pr-5 [&_ol]:list-decimal [&_ol]:pr-5",
           "[&_blockquote]:border-r-4 [&_blockquote]:border-accent [&_blockquote]:pr-3 [&_blockquote]:italic [&_blockquote]:text-muted-foreground",
-          "[&_a]:text-accent [&_a]:underline",
+          "[&_a]:text-accent-foreground [&_a]:underline",
           "[&_p]:my-2 [&_hr]:my-3",
         ),
         style: `min-height:${minHeight}px`,
@@ -57,7 +57,7 @@ export function RichTextEditor({ value, onChange, placeholder, className, minHei
   if (!editor) return null;
 
   const tbBtn = (active: boolean) =>
-    cn("h-8 w-8 p-0", active ? "bg-accent/15 text-accent" : "text-foreground");
+    cn("h-8 w-8 p-0", active ? "bg-accent text-accent-foreground" : "text-foreground");
 
   const setLink = () => {
     const prev = editor.getAttributes("link").href || "";

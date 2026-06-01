@@ -103,7 +103,7 @@ function PublicJobPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-10 w-10 animate-spin text-accent" />
+          <Loader2 className="h-10 w-10 animate-spin text-accent-foreground" />
           <p className="text-sm text-muted-foreground animate-pulse">جاري تحميل تفاصيل الوظيفة...</p>
         </div>
       </div>
@@ -144,7 +144,7 @@ function PublicJobPage() {
           <p className="text-muted-foreground text-sm leading-relaxed mb-6">
             شكراً لاهتمامك بالانضمام إلى فريق عمل **EN TEC**. رقم تتبع الطلب الخاص بك هو:
           </p>
-          <div className="bg-muted border border-border/80 rounded-xl p-4 font-mono text-2xl tracking-wider font-bold text-accent mb-6 select-all shadow-sm">
+          <div className="bg-muted border border-border/80 rounded-xl p-4 font-mono text-2xl tracking-wider font-bold text-accent-foreground mb-6 select-all shadow-sm">
             {trackingId}
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed mb-8">
@@ -185,21 +185,21 @@ function PublicJobPage() {
           <div className="border-b border-border/40 bg-muted/30 p-6 sm:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-accent/10 text-accent mb-3">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-accent text-accent-foreground mb-3">
                   <Briefcase className="h-3 w-3" /> وظيفة شاغرة
                 </span>
                 <h2 className="text-2xl font-bold text-card-foreground">{job.title}</h2>
                 <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><Building2 className="h-4 w-4 text-accent" /> {job.dept}</span>
-                  <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4 text-accent" /> جمهورية مصر العربية</span>
-                  <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-accent" /> دوام كامل</span>
+                  <span className="flex items-center gap-1.5"><Building2 className="h-4 w-4 text-accent-foreground" /> {job.dept}</span>
+                  <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4 text-accent-foreground" /> جمهورية مصر العربية</span>
+                  <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-accent-foreground" /> دوام كامل</span>
                 </div>
               </div>
             </div>
             
             <div className="mt-8 border-t border-border/40 pt-6">
               <h3 className="text-md font-bold mb-3 flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-accent" /> تفاصيل وشروط الوظيفة:
+                <BookOpen className="h-4 w-4 text-accent-foreground" /> تفاصيل وشروط الوظيفة:
               </h3>
               <div className="prose prose-sm max-w-none text-muted-foreground leading-relaxed rtl:prose-invert font-sans" dangerouslySetInnerHTML={{ __html: job.description || "<p>لم يتم إضافة وصف وظيفي.</p>" }} />
             </div>
@@ -209,7 +209,7 @@ function PublicJobPage() {
         {/* Application Form */}
         <Card className="shadow-xl p-6 sm:p-8 border border-border/40 backdrop-blur-md bg-card/85 rounded-2xl">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/40">
-            <div className="p-2 bg-accent/10 rounded-lg text-accent"><FileText className="h-5 w-5" /></div>
+            <div className="p-2 bg-accent rounded-lg text-accent-foreground"><FileText className="h-5 w-5" /></div>
             <div>
               <h3 className="text-xl font-bold">نموذج التقديم</h3>
               <p className="text-xs text-muted-foreground">يرجى تعبئة كافة الحقول بدقة وإرفاق ملف السيرة الذاتية الخاص بك</p>
@@ -221,37 +221,37 @@ function PublicJobPage() {
               
               {/* Name */}
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-xs font-bold flex items-center gap-1.5"><User className="h-3.5 w-3.5 text-accent" /> الاسم الكامل</Label>
+                <Label htmlFor="name" className="text-xs font-bold flex items-center gap-1.5"><User className="h-3.5 w-3.5 text-accent-foreground" /> الاسم الكامل</Label>
                 <Input id="name" required value={name} onChange={e => setName(e.target.value)} placeholder="أحمد محمد علي" className="h-11" />
               </div>
 
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-bold flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-accent" /> البريد الإلكتروني</Label>
+                <Label htmlFor="email" className="text-xs font-bold flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-accent-foreground" /> البريد الإلكتروني</Label>
                 <Input id="email" type="email" required dir="ltr" className="text-right h-11" value={email} onChange={e => setEmail(e.target.value)} placeholder="example@email.com" />
               </div>
 
               {/* Phone */}
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-xs font-bold flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-accent" /> رقم الهاتف</Label>
+                <Label htmlFor="phone" className="text-xs font-bold flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-accent-foreground" /> رقم الهاتف</Label>
                 <Input id="phone" type="tel" required dir="ltr" className="text-right h-11" value={phone} onChange={e => setPhone(e.target.value)} placeholder="0100 000 0000" />
               </div>
 
               {/* Birth Date */}
               <div className="space-y-2">
-                <Label htmlFor="birthDate" className="text-xs font-bold flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-accent" /> تاريخ الميلاد</Label>
+                <Label htmlFor="birthDate" className="text-xs font-bold flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-accent-foreground" /> تاريخ الميلاد</Label>
                 <Input id="birthDate" type="date" required dir="ltr" className="text-right h-11" value={birthDate} onChange={e => setBirthDate(e.target.value)} />
               </div>
 
               {/* Educational Qualification */}
               <div className="space-y-2">
-                <Label htmlFor="qualification" className="text-xs font-bold flex items-center gap-1.5"><GraduationCap className="h-3.5 w-3.5 text-accent" /> المؤهل التعليمي</Label>
+                <Label htmlFor="qualification" className="text-xs font-bold flex items-center gap-1.5"><GraduationCap className="h-3.5 w-3.5 text-accent-foreground" /> المؤهل التعليمي</Label>
                 <Input id="qualification" required value={qualification} onChange={e => setQualification(e.target.value)} placeholder="بكالوريوس هندسة حاسبات / تجارة / إلخ" className="h-11" />
               </div>
 
               {/* Military Status */}
               <div className="space-y-2">
-                <Label htmlFor="militaryStatus" className="text-xs font-bold flex items-center gap-1.5"><ShieldAlert className="h-3.5 w-3.5 text-accent" /> موقف التجنيد</Label>
+                <Label htmlFor="militaryStatus" className="text-xs font-bold flex items-center gap-1.5"><ShieldAlert className="h-3.5 w-3.5 text-accent-foreground" /> موقف التجنيد</Label>
                 <Select value={militaryStatus} onValueChange={setMilitaryStatus} required>
                   <SelectTrigger className="h-11">
                     <SelectValue placeholder="اختر الموقف التجنيدي" />
@@ -267,21 +267,21 @@ function PublicJobPage() {
 
               {/* Previous Experience */}
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="experience" className="text-xs font-bold flex items-center gap-1.5"><Award className="h-3.5 w-3.5 text-accent" /> الخبرات السابقة</Label>
+                <Label htmlFor="experience" className="text-xs font-bold flex items-center gap-1.5"><Award className="h-3.5 w-3.5 text-accent-foreground" /> الخبرات السابقة</Label>
                 <Textarea id="experience" required rows={4} value={experience} onChange={e => setExperience(e.target.value)} placeholder="اكتب نبذة عن وظائفك السابقة، المسؤوليات التي توليتها، وعدد سنوات الخبرة..." className="resize-none leading-relaxed" />
               </div>
 
               {/* CV File Upload */}
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="cv" className="text-xs font-bold flex items-center gap-1.5"><Upload className="h-3.5 w-3.5 text-accent" /> السيرة الذاتية (PDF, DOCX) - اختياري</Label>
+                <Label htmlFor="cv" className="text-xs font-bold flex items-center gap-1.5"><Upload className="h-3.5 w-3.5 text-accent-foreground" /> السيرة الذاتية (PDF, DOCX) - اختياري</Label>
                 <div 
                   className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-3 hover:bg-muted/30 transition-all cursor-pointer ${file ? 'border-accent bg-accent/5' : 'border-border'}`}
                   onClick={() => document.getElementById('cv')?.click()}
                 >
                   {file ? (
                     <>
-                      <FileText className="h-12 w-12 text-accent animate-bounce" />
-                      <span className="text-sm font-semibold text-accent">{file.name}</span>
+                      <FileText className="h-12 w-12 text-accent-foreground animate-bounce" />
+                      <span className="text-sm font-semibold text-accent-foreground">{file.name}</span>
                       <span className="text-xs text-muted-foreground">({(file.size / (1024 * 1024)).toFixed(2)} MB) - انقر لتغيير الملف</span>
                     </>
                   ) : (
