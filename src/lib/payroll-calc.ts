@@ -149,10 +149,10 @@ export function calcEmployeeDeductions(opts: {
   }
   lateDeduction = Math.round(lateDeduction);
 
-  // Per-day rate for unpaid leave & absence
+  // Per-day rate for unpaid leave
   const dayRate = settings.unpaidLeavePerDay && settings.unpaidLeavePerDay > 0
-    ? settings.unpaidLeavePerDay
-    : baseSalary / (settings.workingDaysPerMonth || 26);
+    ? baseSalary * (settings.unpaidLeavePerDay / 100)
+    : baseSalary / (settings.workingDaysPerMonth || 30);
 
   // --- Unpaid leave deduction ---
   let unpaidDays = 0;
@@ -182,7 +182,10 @@ export function calcEmployeeDeductions(opts: {
     if (typeof l.deductionAmount === "number" && l.deductionAmount > 0) {
       permissionDeduction += l.deductionAmount;
     } else {
-      permissionDeduction += Math.round(mins * (settings.permissionDeductionPerMinute || 0));
+      const ratePerMinute = settings.permissionDeductionPerMinute && settings.permissionDeductionPerMinute > 0
+        ? baseSalary * (settings.permissionDeductionPerMinute / 100)
+        : 0;
+      permissionDeduction += Math.round(mins * ratePerMinute);
     }
   }
 
@@ -206,7 +209,7 @@ export function calcEmployeeDeductions(opts: {
   }
   void totalWorking;
   const absencePerDay = settings.absenceDeductionPerDay && settings.absenceDeductionPerDay > 0
-    ? settings.absenceDeductionPerDay
+    ? baseSalary * (settings.absenceDeductionPerDay / 100)
     : baseSalary / 26;
   const absenceDeduction = Math.round(absenceDays * absencePerDay);
 

@@ -80,7 +80,10 @@ function SettingsPage() {
             <div className="space-y-1.5"><Label>بداية الدوام الرسمي</Label><Input type="time" dir="ltr" className="text-right" value={data.workStart} onChange={(e) => set("workStart", e.target.value)} /></div>
             <div className="space-y-1.5"><Label>نهاية الدوام</Label><Input type="time" dir="ltr" className="text-right" value={data.workEnd} onChange={(e) => set("workEnd", e.target.value)} /></div>
             <div className="space-y-1.5"><Label>فترة السماح (دقيقة)</Label><Input type="number" dir="ltr" className="text-right" value={data.lateMinutes} onChange={(e) => set("lateMinutes", Number(e.target.value))} /></div>
-            <div className="space-y-1.5"><Label>خصم الدقيقة (ج.م)</Label><Input type="number" dir="ltr" className="text-right" value={data.lateDeductionPerMinute} onChange={(e) => set("lateDeductionPerMinute", Number(e.target.value))} /></div>
+            <div className="space-y-1.5">
+              <Label>خصم الدقيقة للتأخير (%) من الراتب</Label>
+              <Input type="number" step="0.001" dir="ltr" className="text-right" value={data.lateDeductionPerMinute} onChange={(e) => set("lateDeductionPerMinute", Number(e.target.value))} />
+            </div>
             <div className="space-y-2 sm:col-span-2">
               <Label>أيام العمل الأسبوعية</Label>
               <div className="flex flex-wrap gap-2 pt-1">
@@ -125,19 +128,19 @@ function SettingsPage() {
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label>خصم يوم الغياب (ج.م)</Label>
-              <Input type="number" dir="ltr" className="text-right" value={data.absenceDeductionPerDay} onChange={(e) => set("absenceDeductionPerDay", Number(e.target.value))} />
-              <p className="text-[11px] text-muted-foreground">اتركه 0 لاستخدام (الراتب ÷ أيام الشهر).</p>
+              <Label>خصم يوم الغياب (%) من الراتب</Label>
+              <Input type="number" step="0.01" dir="ltr" className="text-right" value={data.absenceDeductionPerDay} onChange={(e) => set("absenceDeductionPerDay", Number(e.target.value))} />
+              <p className="text-[11px] text-muted-foreground">اتركه 0 للاعتماد التلقائي (الراتب ÷ 26، أي حوالي 3.85%).</p>
             </div>
             <div className="space-y-1.5">
-              <Label>خصم يوم بدون راتب (ج.م)</Label>
-              <Input type="number" dir="ltr" className="text-right" value={data.unpaidLeavePerDay} onChange={(e) => set("unpaidLeavePerDay", Number(e.target.value))} />
-              <p className="text-[11px] text-muted-foreground">اتركه 0 لاستخدام (الراتب ÷ أيام الشهر).</p>
+              <Label>خصم يوم بدون راتب (%) من الراتب</Label>
+              <Input type="number" step="0.01" dir="ltr" className="text-right" value={data.unpaidLeavePerDay} onChange={(e) => set("unpaidLeavePerDay", Number(e.target.value))} />
+              <p className="text-[11px] text-muted-foreground">اتركه 0 للاعتماد التلقائي (الراتب ÷ 30، أي حوالي 3.33%).</p>
             </div>
             <div className="space-y-1.5 sm:col-span-2">
-              <Label>خصم دقيقة الإذن (ج.م)</Label>
-              <Input type="number" dir="ltr" className="text-right" value={data.permissionDeductionPerMinute} onChange={(e) => set("permissionDeductionPerMinute", Number(e.target.value))} />
-              <p className="text-[11px] text-muted-foreground">يُطبَّق على أذونات الخروج المبكر / التأخير / جزء اليوم.</p>
+              <Label>خصم دقيقة الإذن (%) من الراتب</Label>
+              <Input type="number" step="0.001" dir="ltr" className="text-right" value={data.permissionDeductionPerMinute} onChange={(e) => set("permissionDeductionPerMinute", Number(e.target.value))} />
+              <p className="text-[11px] text-muted-foreground">يُطبَّق كنسبة مئوية من مرتب الموظف لكل دقيقة إذن (مثال: 0.03% تعادل 3 جنيه لراتب 10,000).</p>
             </div>
           </div>
         </Card>

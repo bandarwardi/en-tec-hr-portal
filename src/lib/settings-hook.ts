@@ -41,10 +41,10 @@ export const defaultSettings: AppSettings = {
   workEnd: "17:00",
   lateMinutes: 10,
   workDays: "الأحد - الخميس",
-  lateDeductionPerMinute: 2,
+  lateDeductionPerMinute: 0.02,
   absenceDeductionPerDay: 0,
   unpaidLeavePerDay: 0,
-  permissionDeductionPerMinute: 1,
+  permissionDeductionPerMinute: 0.03,
   workingDaysPerMonth: 26,
   workingDays: [0, 1, 2, 3, 4],
 };
