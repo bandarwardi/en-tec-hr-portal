@@ -21,12 +21,15 @@ function PayrollPrintPage() {
   const [employee, setEmployee] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const { data: attendance, loading: loadingAtt } = useCollection("attendance", [], !!slip);
-  const { data: leaves, loading: loadingLeaves } = useCollection("leaves", [], !!slip);
-  const { data: adjustments, loading: loadingAdj } = useCollection("adjustments", [], !!slip);
+  const searchParams = new URLSearchParams(window.location.search);
+  const live = searchParams.get("live") === "true";
+
+  const { data: attendance, loading: loadingAtt } = useCollection("attendance", [], !live || !slip);
+  const { data: leaves, loading: loadingLeaves } = useCollection("leaves", [], !live || !slip);
+  const { data: adjustments, loading: loadingAdj } = useCollection("adjustments", [], !live || !slip);
   const { settings, loading: loadingSettings } = useSettings();
 
-  const isLiveLoading = loadingAtt || loadingLeaves || loadingAdj || loadingSettings;
+  const isLiveLoading = live && (loadingAtt || loadingLeaves || loadingAdj || loadingSettings);
 
   useEffect(() => {
     async function load() {
@@ -91,7 +94,7 @@ function PayrollPrintPage() {
   }, [slip]);
 
   const liveDetails = useMemo(() => {
-    if (!slip || isLiveLoading) return staticDetails;
+    if (!live || !slip || isLiveLoading) return staticDetails;
     
     const automated = calcEmployeeDeductions({
       employeeId: slip.employeeId,
@@ -156,7 +159,7 @@ function PayrollPrintPage() {
       totalDeduct,
       net,
     };
-  }, [slip, employee, attendance, leaves, adjustments, settings, isLiveLoading, staticDetails]);
+  }, [live, slip, employee, attendance, leaves, adjustments, settings, isLiveLoading, staticDetails]);
 
   const details = liveDetails || staticDetails;
 

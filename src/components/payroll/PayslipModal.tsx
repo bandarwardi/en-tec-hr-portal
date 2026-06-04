@@ -95,21 +95,23 @@ export function PayslipModal({
   open, 
   setOpen, 
   slip, 
-  employee 
+  employee,
+  live = false
 }: { 
   open: boolean; 
   setOpen: (open: boolean) => void; 
   slip: SlipData | null;
   employee?: { code?: string; role?: string; dept?: string; allowance?: number };
+  live?: boolean;
 }) {
   if (!slip) return null;
 
-  const { data: attendance, loading: loadingAtt } = useCollection("attendance", [], open);
-  const { data: leaves, loading: loadingLeaves } = useCollection("leaves", [], open);
-  const { data: adjustments, loading: loadingAdj } = useCollection("adjustments", [], open);
+  const { data: attendance, loading: loadingAtt } = useCollection("attendance", [], !live || !open);
+  const { data: leaves, loading: loadingLeaves } = useCollection("leaves", [], !live || !open);
+  const { data: adjustments, loading: loadingAdj } = useCollection("adjustments", [], !live || !open);
   const { settings, loading: loadingSettings } = useSettings();
 
-  const isLiveLoading = loadingAtt || loadingLeaves || loadingAdj || loadingSettings;
+  const isLiveLoading = live && (loadingAtt || loadingLeaves || loadingAdj || loadingSettings);
 
   const staticDetails = useMemo(() => {
     if (!slip) return null;
@@ -144,7 +146,7 @@ export function PayslipModal({
   }, [slip]);
 
   const liveDetails = useMemo(() => {
-    if (!slip || isLiveLoading) return staticDetails;
+    if (!live || !slip || isLiveLoading) return staticDetails;
     
     const automated = calcEmployeeDeductions({
       employeeId: slip.employeeId,
@@ -209,7 +211,7 @@ export function PayslipModal({
       totalDeduct,
       net,
     };
-  }, [slip, employee, attendance, leaves, adjustments, settings, isLiveLoading, staticDetails]);
+  }, [live, slip, employee, attendance, leaves, adjustments, settings, isLiveLoading, staticDetails]);
 
   const details = liveDetails || staticDetails;
 
@@ -217,7 +219,7 @@ export function PayslipModal({
   const baseAllow = details.baseAllow;
   
   const handlePrint = () => {
-    window.open(`/payroll-print/${slip.id}`, "_blank");
+    window.open(`/payroll-print/${slip.id}${live ? '?live=true' : ''}`, "_blank");
   };
 
   return (

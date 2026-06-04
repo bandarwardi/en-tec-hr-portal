@@ -592,7 +592,7 @@ function PayrollTab({ employeeId, emp }: { employeeId: string; emp: any }) {
         </Table>
       </div>
 
-      <PayslipModal open={modalOpen} setOpen={setModalOpen} slip={selectedSlip} employee={emp} />
+      <PayslipModal open={modalOpen} setOpen={setModalOpen} slip={selectedSlip} employee={emp} live />
     </Card>
   );
 }
