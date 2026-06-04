@@ -64,7 +64,7 @@ interface EmployeeFull {
   emergencyContact?: string;
   emergencyPhone?: string;
   manager?: string;
-  employmentType?: string; // دوام كامل / جزئي / عقد
+  hasTargetAndBonus?: boolean;
   bankAccount?: string;
   notes?: string;
 }
@@ -183,11 +183,12 @@ function InfoTab({
           </Select>
         </F>
         <F label="المنصب"><Input value={emp.role || ""} onChange={(e) => set("role", e.target.value)} /></F>
-        <F label="نوع الدوام">
-          <Select value={emp.employmentType || ""} onValueChange={(v) => set("employmentType", v)}>
-            <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+        <F label="هل لديه تارجت وبونص؟">
+          <Select value={emp.hasTargetAndBonus ? "yes" : "no"} onValueChange={(v) => set("hasTargetAndBonus", v === "yes")}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {["دوام كامل", "دوام جزئي", "عقد مؤقت", "متدرب"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              <SelectItem value="yes">نعم</SelectItem>
+              <SelectItem value="no">لا</SelectItem>
             </SelectContent>
           </Select>
         </F>
@@ -558,8 +559,9 @@ function PayrollTab({ employeeId, emp }: { employeeId: string; emp: any }) {
                 const tax = (settings.taxRate ?? 0) / 100;
                 const insuranceAndTax = Math.round(s.base * (ins + tax));
 
-                const salesBonus = (s as any).salesBonus || 0;
-                const salesTarget = (s as any).salesTarget || 0;
+                const hasBonus = !!emp?.hasTargetAndBonus;
+                const salesBonus = hasBonus ? ((s as any).salesBonus || 0) : 0;
+                const salesTarget = hasBonus ? ((s as any).salesTarget || 0) : 0;
 
                 const baseAllow = emp?.allowance || 0;
                 liveAllow = baseAllow + customAllowance + salesBonus + salesTarget;

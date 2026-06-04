@@ -101,15 +101,16 @@ function PayrollPage() {
       });
 
       // Calculate CRM sales achievements
-      const salesRecord = crmSales.find((s) => s.email?.toLowerCase() === e.email?.toLowerCase());
+      const hasBonus = !!e.hasTargetAndBonus;
+      const salesRecord = hasBonus ? crmSales.find((s) => s.email?.toLowerCase() === e.email?.toLowerCase()) : null;
       const usd = salesRecord ? salesRecord.totalSalesUSD : 0;
       let salesBonus = 0;
-      if (usd >= 1500 && usd < 2000) {
+      if (hasBonus && usd >= 1500 && usd < 2000) {
         salesBonus = 500;
-      } else if (usd >= 2000) {
+      } else if (hasBonus && usd >= 2000) {
         salesBonus = 1000;
       }
-      const salesTarget = usd * 2.5;
+      const salesTarget = hasBonus ? usd * 2.5 : 0;
 
       const fixedDeduct = Math.round(base * (ins + tax));
       const totalAllow = baseAllow + customAllow + salesBonus + salesTarget;
@@ -167,13 +168,16 @@ function PayrollPage() {
   };
 
   const updateSalesUSD = async (slip: Slip, usd: number, showToast = true) => {
+    const emp = employees.find((x) => x.id === slip.employeeId);
+    const hasBonus = !!emp?.hasTargetAndBonus;
+
     let bonus = 0;
-    if (usd >= 1500 && usd < 2000) {
+    if (hasBonus && usd >= 1500 && usd < 2000) {
       bonus = 500;
-    } else if (usd >= 2000) {
+    } else if (hasBonus && usd >= 2000) {
       bonus = 1000;
     }
-    const target = usd * 2.5;
+    const target = hasBonus ? usd * 2.5 : 0;
 
     const prevBonus = (slip as any).salesBonus || 0;
     const prevTarget = (slip as any).salesTarget || 0;

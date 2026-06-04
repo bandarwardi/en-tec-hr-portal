@@ -128,9 +128,10 @@ function PayrollPrintPage() {
     const tax = (settings.taxRate ?? 0) / 100;
     const insuranceAndTax = Math.round(slip.base * (ins + tax));
 
-    const salesUSD = slip.salesUSD || 0;
-    const salesBonus = slip.salesBonus || 0;
-    const salesTarget = slip.salesTarget || 0;
+    const hasBonus = !!employee?.hasTargetAndBonus;
+    const salesUSD = hasBonus ? (slip.salesUSD || 0) : 0;
+    const salesBonus = hasBonus ? (slip.salesBonus || 0) : 0;
+    const salesTarget = hasBonus ? (slip.salesTarget || 0) : 0;
 
     const baseAllow = employee?.allowance || 0;
     const totalAllow = baseAllow + customAllowance + salesBonus + salesTarget;
