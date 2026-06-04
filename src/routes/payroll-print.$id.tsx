@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { getDocOnce } from "@/lib/use-collection";
+import { useEffect, useState, useMemo } from "react";
+import { getDocOnce, useCollection } from "@/lib/use-collection";
 import { formatEGP } from "@/lib/currency";
 import { parseBreakdown } from "@/components/payroll/PayslipModal";
+import { useSettings } from "@/lib/settings-hook";
+import { calcEmployeeDeductions } from "@/lib/payroll-calc";
 import logoUrl from "@/assets/imgs/logo.jpeg";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,6 +20,13 @@ function PayrollPrintPage() {
   const [slip, setSlip] = useState<any>(null);
   const [employee, setEmployee] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  const { data: attendance, loading: loadingAtt } = useCollection("attendance", [], !!slip);
+  const { data: leaves, loading: loadingLeaves } = useCollection("leaves", [], !!slip);
+  const { data: adjustments, loading: loadingAdj } = useCollection("adjustments", [], !!slip);
+  const { settings, loading: loadingSettings } = useSettings();
+
+  const isLiveLoading = loadingAtt || loadingLeaves || loadingAdj || loadingSettings;
 
   useEffect(() => {
     async function load() {
@@ -40,24 +49,128 @@ function PayrollPrintPage() {
   }, [id]);
 
   useEffect(() => {
-    if (!loading && slip) {
+    if (!loading && slip && !isLiveLoading) {
       // Auto trigger print after rendering is complete
       const timer = setTimeout(() => {
         window.print();
       }, 700);
       return () => clearTimeout(timer);
     }
-  }, [loading, slip]);
+  }, [loading, slip, isLiveLoading]);
 
-  if (loading) {
+  const staticDetails = useMemo(() => {
+    if (!slip) return null;
+    const parsed = parseBreakdown(slip.breakdown || "");
+    const salesUSD = slip.salesUSD || 0;
+    const salesBonus = slip.salesBonus || 0;
+    const salesTarget = slip.salesTarget || 0;
+    const baseAllow = slip.allow - parsed.customAllowance - salesBonus - salesTarget;
+    
+    return {
+      insuranceAndTax: parsed.insuranceAndTax,
+      lateMinutes: parsed.lateMinutes,
+      lateDeduction: parsed.lateDeduction,
+      absenceDays: parsed.absenceDays,
+      absenceDeduction: parsed.absenceDeduction,
+      unpaidDays: parsed.unpaidDays,
+      unpaidDeduction: parsed.unpaidDeduction,
+      permissionMinutes: parsed.permissionMinutes,
+      permissionDeduction: parsed.permissionDeduction,
+      customAllowance: parsed.customAllowance,
+      customAllowanceReasons: parsed.customAllowanceReasons,
+      customDeduction: parsed.customDeduction,
+      customDeductionReasons: parsed.customDeductionReasons,
+      salesUSD,
+      salesBonus,
+      salesTarget,
+      baseAllow,
+      totalAllow: slip.allow,
+      totalDeduct: slip.deduct,
+      net: slip.net,
+    };
+  }, [slip]);
+
+  const liveDetails = useMemo(() => {
+    if (!slip || isLiveLoading) return staticDetails;
+    
+    const automated = calcEmployeeDeductions({
+      employeeId: slip.employeeId,
+      baseSalary: slip.base,
+      month: slip.month,
+      attendance: attendance || [],
+      leaves: leaves || [],
+      settings,
+    });
+
+    const empAdjs = (adjustments || []).filter(
+      (adj: any) => adj.employeeId === slip.employeeId && adj.month === slip.month
+    );
+    const customAllowance = empAdjs
+      .filter((a: any) => a.type === "allowance")
+      .reduce((sum: number, a: any) => sum + (Number(a.amount) || 0), 0);
+    const customAllowanceReasons = empAdjs
+      .filter((a: any) => a.type === "allowance")
+      .map((a: any) => a.reason)
+      .join(", ");
+    
+    const customDeduction = empAdjs
+      .filter((a: any) => a.type === "deduction")
+      .reduce((sum: number, a: any) => sum + (Number(a.amount) || 0), 0);
+    const customDeductionReasons = empAdjs
+      .filter((a: any) => a.type === "deduction")
+      .map((a: any) => a.reason)
+      .join(", ");
+
+    const ins = (settings.insuranceRate ?? 10) / 100;
+    const tax = (settings.taxRate ?? 0) / 100;
+    const insuranceAndTax = Math.round(slip.base * (ins + tax));
+
+    const salesUSD = slip.salesUSD || 0;
+    const salesBonus = slip.salesBonus || 0;
+    const salesTarget = slip.salesTarget || 0;
+
+    const baseAllow = employee?.allowance || 0;
+    const totalAllow = baseAllow + customAllowance + salesBonus + salesTarget;
+    const totalDeduct = insuranceAndTax + automated.total + customDeduction;
+    const net = slip.base + totalAllow - totalDeduct;
+
+    return {
+      insuranceAndTax,
+      lateMinutes: automated.lateMinutes,
+      lateDeduction: automated.lateDeduction,
+      absenceDays: automated.absenceDays,
+      absenceDeduction: automated.absenceDeduction,
+      unpaidDays: automated.unpaidDays,
+      unpaidDeduction: automated.unpaidDeduction,
+      permissionMinutes: automated.permissionMinutes,
+      permissionDeduction: automated.permissionDeduction,
+      customAllowance,
+      customAllowanceReasons,
+      customDeduction,
+      customDeductionReasons,
+      salesUSD,
+      salesBonus,
+      salesTarget,
+      baseAllow,
+      totalAllow,
+      totalDeduct,
+      net,
+    };
+  }, [slip, employee, attendance, leaves, adjustments, settings, isLiveLoading, staticDetails]);
+
+  const details = liveDetails || staticDetails;
+
+  const isLoading = loading || isLiveLoading;
+
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <p className="text-muted-foreground text-lg">جاري تحميل بيانات الكشف...</p>
+        <p className="text-muted-foreground text-lg">جاري تحميل بيانات الكشف المحدثة...</p>
       </div>
     );
   }
 
-  if (!slip) {
+  if (!slip || !details) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <p className="text-destructive text-lg font-semibold">لم يتم العثور على الكشف المطلوب.</p>
@@ -65,8 +178,7 @@ function PayrollPrintPage() {
     );
   }
 
-  const details = parseBreakdown(slip.breakdown || "");
-  const baseAllow = slip.allow - details.customAllowance - (slip.salesBonus || 0) - (slip.salesTarget || 0);
+  const baseAllow = details.baseAllow;
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-8 flex flex-col items-center">
@@ -163,21 +275,21 @@ function PayrollPrintPage() {
                   <TableCell></TableCell>
                 </TableRow>
               )}
-              {slip.salesBonus > 0 && (
+              {details.salesBonus > 0 && (
                 <TableRow>
                   <TableCell className="font-medium">
-                    بونص المبيعات <span className="text-xs text-muted-foreground">(مبيعات: {slip.salesUSD}$)</span>
+                    بونص المبيعات <span className="text-xs text-muted-foreground">(مبيعات: {details.salesUSD}$)</span>
                   </TableCell>
-                  <TableCell className="text-success">{formatEGP(slip.salesBonus)}</TableCell>
+                  <TableCell className="text-success">{formatEGP(details.salesBonus)}</TableCell>
                   <TableCell></TableCell>
                 </TableRow>
               )}
-              {slip.salesTarget > 0 && (
+              {details.salesTarget > 0 && (
                 <TableRow>
                   <TableCell className="font-medium">
-                    عمولة تحقيق التارجت <span className="text-xs text-muted-foreground">(مبيعات: {slip.salesUSD}$ × 2.5)</span>
+                    عمولة تحقيق التارجت <span className="text-xs text-muted-foreground">(مبيعات: {details.salesUSD}$ × 2.5)</span>
                   </TableCell>
-                  <TableCell className="text-success">{formatEGP(slip.salesTarget)}</TableCell>
+                  <TableCell className="text-success">{formatEGP(details.salesTarget)}</TableCell>
                   <TableCell></TableCell>
                 </TableRow>
               )}
@@ -226,8 +338,8 @@ function PayrollPrintPage() {
               {/* Totals */}
               <TableRow className="bg-muted/20">
                 <TableCell className="font-bold">الإجمالي</TableCell>
-                <TableCell className="font-bold text-success">{formatEGP(slip.base + slip.allow)}</TableCell>
-                <TableCell className="font-bold text-destructive">{formatEGP(slip.deduct)}</TableCell>
+                <TableCell className="font-bold text-success">{formatEGP(slip.base + details.totalAllow)}</TableCell>
+                <TableCell className="font-bold text-destructive">{formatEGP(details.totalDeduct)}</TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -240,7 +352,7 @@ function PayrollPrintPage() {
             <p className="text-sm text-accent-foreground/80 mt-1">ما يستحقه الموظف لهذا الشهر</p>
           </div>
           <div className="text-3xl font-black text-accent-foreground tracking-tight">
-            {formatEGP(slip.net)}
+            {formatEGP(details.net)}
           </div>
         </div>
       </div>

@@ -5,6 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Printer } from "lucide-react";
 import { formatEGP } from "@/lib/currency";
 import logoUrl from "@/assets/imgs/logo.jpeg";
+import { useMemo } from "react";
+import { useCollection } from "@/lib/use-collection";
+import { useSettings } from "@/lib/settings-hook";
+import { calcEmployeeDeductions } from "@/lib/payroll-calc";
 
 export interface SlipData {
   id?: string;
@@ -96,12 +100,121 @@ export function PayslipModal({
   open: boolean; 
   setOpen: (open: boolean) => void; 
   slip: SlipData | null;
-  employee?: { code?: string; role?: string; dept?: string; };
+  employee?: { code?: string; role?: string; dept?: string; allowance?: number };
 }) {
   if (!slip) return null;
 
-  const details = parseBreakdown(slip.breakdown || "");
-  const baseAllow = slip.allow - details.customAllowance - ((slip as any).salesBonus || 0) - ((slip as any).salesTarget || 0);
+  const { data: attendance, loading: loadingAtt } = useCollection("attendance", [], open);
+  const { data: leaves, loading: loadingLeaves } = useCollection("leaves", [], open);
+  const { data: adjustments, loading: loadingAdj } = useCollection("adjustments", [], open);
+  const { settings, loading: loadingSettings } = useSettings();
+
+  const isLiveLoading = loadingAtt || loadingLeaves || loadingAdj || loadingSettings;
+
+  const staticDetails = useMemo(() => {
+    if (!slip) return null;
+    const parsed = parseBreakdown(slip.breakdown || "");
+    const salesUSD = (slip as any).salesUSD || 0;
+    const salesBonus = (slip as any).salesBonus || 0;
+    const salesTarget = (slip as any).salesTarget || 0;
+    const baseAllow = slip.allow - parsed.customAllowance - salesBonus - salesTarget;
+    
+    return {
+      insuranceAndTax: parsed.insuranceAndTax,
+      lateMinutes: parsed.lateMinutes,
+      lateDeduction: parsed.lateDeduction,
+      absenceDays: parsed.absenceDays,
+      absenceDeduction: parsed.absenceDeduction,
+      unpaidDays: parsed.unpaidDays,
+      unpaidDeduction: parsed.unpaidDeduction,
+      permissionMinutes: parsed.permissionMinutes,
+      permissionDeduction: parsed.permissionDeduction,
+      customAllowance: parsed.customAllowance,
+      customAllowanceReasons: parsed.customAllowanceReasons,
+      customDeduction: parsed.customDeduction,
+      customDeductionReasons: parsed.customDeductionReasons,
+      salesUSD,
+      salesBonus,
+      salesTarget,
+      baseAllow,
+      totalAllow: slip.allow,
+      totalDeduct: slip.deduct,
+      net: slip.net,
+    };
+  }, [slip]);
+
+  const liveDetails = useMemo(() => {
+    if (!slip || isLiveLoading) return staticDetails;
+    
+    const automated = calcEmployeeDeductions({
+      employeeId: slip.employeeId,
+      baseSalary: slip.base,
+      month: slip.month,
+      attendance: attendance || [],
+      leaves: leaves || [],
+      settings,
+    });
+
+    const empAdjs = (adjustments || []).filter(
+      (adj: any) => adj.employeeId === slip.employeeId && adj.month === slip.month
+    );
+    const customAllowance = empAdjs
+      .filter((a: any) => a.type === "allowance")
+      .reduce((sum: number, a: any) => sum + (Number(a.amount) || 0), 0);
+    const customAllowanceReasons = empAdjs
+      .filter((a: any) => a.type === "allowance")
+      .map((a: any) => a.reason)
+      .join(", ");
+    
+    const customDeduction = empAdjs
+      .filter((a: any) => a.type === "deduction")
+      .reduce((sum: number, a: any) => sum + (Number(a.amount) || 0), 0);
+    const customDeductionReasons = empAdjs
+      .filter((a: any) => a.type === "deduction")
+      .map((a: any) => a.reason)
+      .join(", ");
+
+    const ins = (settings.insuranceRate ?? 10) / 100;
+    const tax = (settings.taxRate ?? 0) / 100;
+    const insuranceAndTax = Math.round(slip.base * (ins + tax));
+
+    const salesUSD = (slip as any).salesUSD || 0;
+    const salesBonus = (slip as any).salesBonus || 0;
+    const salesTarget = (slip as any).salesTarget || 0;
+
+    const baseAllow = employee?.allowance || 0;
+    const totalAllow = baseAllow + customAllowance + salesBonus + salesTarget;
+    const totalDeduct = insuranceAndTax + automated.total + customDeduction;
+    const net = slip.base + totalAllow - totalDeduct;
+
+    return {
+      insuranceAndTax,
+      lateMinutes: automated.lateMinutes,
+      lateDeduction: automated.lateDeduction,
+      absenceDays: automated.absenceDays,
+      absenceDeduction: automated.absenceDeduction,
+      unpaidDays: automated.unpaidDays,
+      unpaidDeduction: automated.unpaidDeduction,
+      permissionMinutes: automated.permissionMinutes,
+      permissionDeduction: automated.permissionDeduction,
+      customAllowance,
+      customAllowanceReasons,
+      customDeduction,
+      customDeductionReasons,
+      salesUSD,
+      salesBonus,
+      salesTarget,
+      baseAllow,
+      totalAllow,
+      totalDeduct,
+      net,
+    };
+  }, [slip, employee, attendance, leaves, adjustments, settings, isLiveLoading, staticDetails]);
+
+  const details = liveDetails || staticDetails;
+
+  if (!details) return null;
+  const baseAllow = details.baseAllow;
   
   const handlePrint = () => {
     window.open(`/payroll-print/${slip.id}`, "_blank");
@@ -218,22 +331,22 @@ export function PayslipModal({
                   </TableRow>
                 )}
 
-                {((slip as any).salesBonus || 0) > 0 && (
+                {details.salesBonus > 0 && (
                   <TableRow>
                     <TableCell className="font-medium">
-                      بونص المبيعات <span className="text-xs text-muted-foreground">(مبيعات: {(slip as any).salesUSD || 0}$)</span>
+                      بونص المبيعات <span className="text-xs text-muted-foreground">(مبيعات: {details.salesUSD}$)</span>
                     </TableCell>
-                    <TableCell className="text-success">{formatEGP((slip as any).salesBonus)}</TableCell>
+                    <TableCell className="text-success">{formatEGP(details.salesBonus)}</TableCell>
                     <TableCell></TableCell>
                   </TableRow>
                 )}
 
-                {((slip as any).salesTarget || 0) > 0 && (
+                {details.salesTarget > 0 && (
                   <TableRow>
                     <TableCell className="font-medium">
-                      عمولة تحقيق التارجت <span className="text-xs text-muted-foreground">(مبيعات: {(slip as any).salesUSD || 0}$ × 2.5)</span>
+                      عمولة تحقيق التارجت <span className="text-xs text-muted-foreground">(مبيعات: {details.salesUSD}$ × 2.5)</span>
                     </TableCell>
-                    <TableCell className="text-success">{formatEGP((slip as any).salesTarget)}</TableCell>
+                    <TableCell className="text-success">{formatEGP(details.salesTarget)}</TableCell>
                     <TableCell></TableCell>
                   </TableRow>
                 )}
@@ -282,8 +395,8 @@ export function PayslipModal({
                 {/* Totals */}
                 <TableRow className="bg-muted/20">
                   <TableCell className="font-bold">الإجمالي</TableCell>
-                  <TableCell className="font-bold text-success">{formatEGP(slip.base + slip.allow)}</TableCell>
-                  <TableCell className="font-bold text-destructive">{formatEGP(slip.deduct)}</TableCell>
+                  <TableCell className="font-bold text-success">{formatEGP(slip.base + details.totalAllow)}</TableCell>
+                  <TableCell className="font-bold text-destructive">{formatEGP(details.totalDeduct)}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -296,7 +409,7 @@ export function PayslipModal({
               <p className="text-sm text-accent-foreground/80 mt-1">ما يستحقه الموظف لهذا الشهر</p>
             </div>
             <div className="text-3xl font-black text-accent-foreground tracking-tight">
-              {formatEGP(slip.net)}
+              {formatEGP(details.net)}
             </div>
           </div>
         </div>
