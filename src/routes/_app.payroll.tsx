@@ -38,6 +38,7 @@ function PayrollPage() {
   const [month, setMonth] = useState(currentMonth());
   const [selectedSlip, setSelectedSlip] = useState<Slip | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [loadingSales, setLoadingSales] = useState(false);
 
   const { data: employees } = useCollection<any>("employees");
   const { data: allSlips, loading } = useCollection<Slip>("payroll", [orderBy("createdAt", "desc")]);
@@ -59,6 +60,19 @@ function PayrollPage() {
     if (slips.length > 0) return toast.error("كشف هذا الشهر موجود مسبقاً");
     if (employees.length === 0) return toast.error("لا يوجد موظفون");
     
+    setLoadingSales(true);
+    let crmSales: { email: string; totalSalesUSD: number }[] = [];
+    try {
+      const response = await fetch(`http://localhost:3000/api/hr-sales-summary?month=${month}&apiKey=entec_hr_secret_key_2026`);
+      if (response.ok) {
+        crmSales = await response.json();
+      }
+    } catch (err) {
+      console.warn("Failed to fetch CRM sales:", err);
+    } finally {
+      setLoadingSales(false);
+    }
+
     // Fetch exact settings document to guarantee we don't rely on cached or partial collection array
     const d = await getDocOnce("settings_doc", "general");
     const dbSettings = d || {};
@@ -86,12 +100,26 @@ function PayrollPage() {
         settings: appSettings,
       });
 
+      // Calculate CRM sales achievements
+      const salesRecord = crmSales.find((s) => s.email?.toLowerCase() === e.email?.toLowerCase());
+      const usd = salesRecord ? salesRecord.totalSalesUSD : 0;
+      let salesBonus = 0;
+      if (usd >= 1500 && usd < 2000) {
+        salesBonus = 500;
+      } else if (usd >= 2000) {
+        salesBonus = 1000;
+      }
+      const salesTarget = usd * 2.5;
+
       const fixedDeduct = Math.round(base * (ins + tax));
-      const totalAllow = baseAllow + customAllow;
+      const totalAllow = baseAllow + customAllow + salesBonus + salesTarget;
       const totalDeduct = fixedDeduct + automated.total + customDeduct;
       const net = base + totalAllow - totalDeduct;
 
       let breakdown = `تأمينات وضرائب: ${fixedDeduct} | ${automated.breakdown}`;
+      if (usd > 0) {
+        breakdown += ` | مبيعات: ${usd}$ (بونص: ${salesBonus} + تارجت: ${salesTarget})`;
+      }
       if (customAllow > 0) {
         const reasons = empAdjs.filter((a) => a.type === "allowance").map((a) => a.reason).join(", ");
         breakdown += ` | علاوات إضافية: ${customAllow} (${reasons})`;
@@ -111,12 +139,12 @@ function PayrollPage() {
         net, 
         status: "بانتظار الدفع",
         breakdown,
-        salesUSD: 0,
-        salesBonus: 0,
-        salesTarget: 0
+        salesUSD: usd,
+        salesBonus,
+        salesTarget
       });
     }
-    toast.success("تم إنشاء كشف الرواتب والتلقائي");
+    toast.success("تم إنشاء كشف الرواتب تلقائياً وسحب مبيعات الـ CRM");
   };
 
   const markPaid = async (id: string) => {
@@ -138,7 +166,7 @@ function PayrollPage() {
     toast.success("تم حذف جميع كشوفات الشهر");
   };
 
-  const updateSalesUSD = async (slip: Slip, usd: number) => {
+  const updateSalesUSD = async (slip: Slip, usd: number, showToast = true) => {
     let bonus = 0;
     if (usd >= 1500 && usd < 2000) {
       bonus = 500;
@@ -167,9 +195,39 @@ function PayrollPage() {
         net: newNet,
         breakdown: newBreakdown
       });
-      toast.success("تم تحديث مبيعات الموظف والراتب الصافي");
+      if (showToast) toast.success("تم تحديث مبيعات الموظف والراتب الصافي");
     } catch (err: any) {
       toast.error("فشل التحديث", { description: err.message });
+    }
+  };
+
+  const syncCrmSales = async () => {
+    if (slips.length === 0) return toast.error("لا توجد كشوفات رواتب لهذا الشهر. يرجى إنشاء الكشوفات أولاً.");
+    
+    setLoadingSales(true);
+    try {
+      const response = await fetch(`http://localhost:3000/api/hr-sales-summary?month=${month}&apiKey=entec_hr_secret_key_2026`);
+      if (!response.ok) {
+        throw new Error("فشل الاتصال بنظام الـ CRM");
+      }
+      const crmSales: { email: string; totalSalesUSD: number }[] = await response.json();
+      
+      let count = 0;
+      for (const slip of slips) {
+        const emp = employees.find((x) => x.id === slip.employeeId);
+        if (!emp || !emp.email) continue;
+        
+        const salesRecord = crmSales.find((s) => s.email?.toLowerCase() === emp.email?.toLowerCase());
+        const usd = salesRecord ? salesRecord.totalSalesUSD : 0;
+        
+        await updateSalesUSD(slip, usd, false);
+        count++;
+      }
+      toast.success(`تم تحديث مبيعات الموظفين تلقائياً بنجاح (${count} موظف).`);
+    } catch (err: any) {
+      toast.error("فشل سحب المبيعات من الـ CRM", { description: err.message });
+    } finally {
+      setLoadingSales(false);
     }
   };
 
@@ -194,11 +252,16 @@ function PayrollPage() {
             <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="rounded-md border border-input bg-background px-3 py-1.5 text-sm" dir="ltr" />
             <Button variant="outline" onClick={exportCsv}><Download className="ml-2 h-4 w-4" />تصدير</Button>
             {slips.length > 0 && (
-              <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive/10" onClick={deleteAllSlips}>
-                <Trash2 className="ml-2 h-4 w-4" />حذف كشوفات الشهر
-              </Button>
+              <>
+                <Button variant="outline" className="border-destructive text-destructive hover:bg-destructive/10" onClick={deleteAllSlips}>
+                  <Trash2 className="ml-2 h-4 w-4" />حذف كشوفات الشهر
+                </Button>
+                <Button variant="outline" onClick={syncCrmSales} disabled={loadingSales} className="border-primary text-primary hover:bg-primary/10">
+                  {loadingSales ? "جاري التحديث..." : "تحديث المبيعات من CRM"}
+                </Button>
+              </>
             )}
-            <Button onClick={generate} disabled={slips.length > 0}><Receipt className="ml-2 h-4 w-4" />إنشاء كشف الشهر</Button>
+            <Button onClick={generate} disabled={slips.length > 0 || loadingSales}><Receipt className="ml-2 h-4 w-4" />{loadingSales ? "جاري الإنشاء..." : "إنشاء كشف الشهر"}</Button>
           </>
         }
       />
