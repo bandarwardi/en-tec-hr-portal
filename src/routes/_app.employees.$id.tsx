@@ -26,8 +26,10 @@ import {
 } from "@/lib/use-collection";
 import { uploadFile } from "@/lib/upload";
 import { toast } from "sonner";
-import { formatEGP } from "@/lib/currency";
 import { PayslipModal, SlipData } from "@/components/payroll/PayslipModal";
+import { useSettings } from "@/lib/settings-hook";
+import { calcEmployeeDeductions } from "@/lib/payroll-calc";
+import { formatEGP } from "@/lib/currency";
 
 export const Route = createFileRoute("/_app/employees/$id")({
   component: EmployeeProfilePage,
@@ -492,6 +494,12 @@ function AttTab({ employeeId }: { employeeId: string }) {
 /* ============== PAYROLL TAB ============== */
 function PayrollTab({ employeeId, emp }: { employeeId: string; emp: any }) {
   const { data: slips, loading } = useCollection<SlipData>("payroll", [orderBy("month", "desc")]);
+  const { data: attendance, loading: loadingAtt } = useCollection<any>("attendance");
+  const { data: leaves, loading: loadingLeaves } = useCollection<any>("leaves");
+  const { data: adjustments, loading: loadingAdj } = useCollection<any>("adjustments");
+  const { settings, loading: loadingSettings } = useSettings();
+
+  const isLiveLoading = loading || loadingAtt || loadingLeaves || loadingAdj || loadingSettings;
   const empSlips = slips.filter((s) => s.employeeId === employeeId);
   const [selectedSlip, setSelectedSlip] = useState<SlipData | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -521,26 +529,65 @@ function PayrollTab({ employeeId, emp }: { employeeId: string; emp: any }) {
           <TableBody>
             {loading && <TableRow><TableCell colSpan={7} className="text-center py-6 text-muted-foreground">جاري التحميل...</TableCell></TableRow>}
             {!loading && empSlips.length === 0 && <TableRow><TableCell colSpan={7} className="py-6 text-center text-muted-foreground">لا توجد كشوفات راتب مسجلة.</TableCell></TableRow>}
-            {empSlips.map((s) => (
-              <TableRow key={s.id}>
-                <TableCell className="font-medium">{s.month}</TableCell>
-                <TableCell>{formatEGP(s.base)}</TableCell>
-                <TableCell className="text-success">+{formatEGP(s.allow)}</TableCell>
-                <TableCell className="text-destructive">-{formatEGP(s.deduct)}</TableCell>
-                <TableCell className="font-bold">{formatEGP(s.net)}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={s.status === "مدفوع" ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}>
-                    {s.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Button size="sm" variant="ghost" onClick={() => { setSelectedSlip(s); setModalOpen(true); }}>
-                    <FileText className="ml-1 h-4 w-4" />
-                    عرض الكشف
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+            {empSlips.map((s) => {
+              let liveAllow = s.allow;
+              let liveDeduct = s.deduct;
+              let liveNet = s.net;
+
+              if (!isLiveLoading) {
+                const automated = calcEmployeeDeductions({
+                  employeeId: s.employeeId,
+                  baseSalary: s.base,
+                  month: s.month,
+                  attendance: attendance || [],
+                  leaves: leaves || [],
+                  settings,
+                });
+
+                const empAdjs = (adjustments || []).filter(
+                  (adj: any) => adj.employeeId === s.employeeId && adj.month === s.month
+                );
+                const customAllowance = empAdjs
+                  .filter((a: any) => a.type === "allowance")
+                  .reduce((sum: number, a: any) => sum + (Number(a.amount) || 0), 0);
+                const customDeduction = empAdjs
+                  .filter((a: any) => a.type === "deduction")
+                  .reduce((sum: number, a: any) => sum + (Number(a.amount) || 0), 0);
+
+                const ins = (settings.insuranceRate ?? 10) / 100;
+                const tax = (settings.taxRate ?? 0) / 100;
+                const insuranceAndTax = Math.round(s.base * (ins + tax));
+
+                const salesBonus = (s as any).salesBonus || 0;
+                const salesTarget = (s as any).salesTarget || 0;
+
+                const baseAllow = emp?.allowance || 0;
+                liveAllow = baseAllow + customAllowance + salesBonus + salesTarget;
+                liveDeduct = insuranceAndTax + automated.total + customDeduction;
+                liveNet = s.base + liveAllow - liveDeduct;
+              }
+
+              return (
+                <TableRow key={s.id}>
+                  <TableCell className="font-medium">{s.month}</TableCell>
+                  <TableCell>{formatEGP(s.base)}</TableCell>
+                  <TableCell className="text-success">+{formatEGP(liveAllow)}</TableCell>
+                  <TableCell className="text-destructive">-{formatEGP(liveDeduct)}</TableCell>
+                  <TableCell className="font-bold">{formatEGP(liveNet)}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={s.status === "مدفوع" ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}>
+                      {s.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button size="sm" variant="ghost" onClick={() => { setSelectedSlip(s); setModalOpen(true); }}>
+                      <FileText className="ml-1 h-4 w-4" />
+                      عرض الكشف
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
