@@ -149,10 +149,10 @@ export function calcEmployeeDeductions(opts: {
   }
   lateDeduction = Math.round(lateDeduction);
 
-  // Per-day rate for unpaid leave
-  const dayRate = settings.unpaidLeavePerDay && settings.unpaidLeavePerDay > 0
-    ? baseSalary * (settings.unpaidLeavePerDay / 100)
-    : baseSalary / (settings.workingDaysPerMonth || 30);
+  // Per-day rate for absence and unpaid leave (merged)
+  const dayRate = settings.absenceDeductionPerDay && settings.absenceDeductionPerDay > 0
+    ? baseSalary * (settings.absenceDeductionPerDay / 100)
+    : baseSalary / 26;
 
   // --- Unpaid leave deduction ---
   let unpaidDays = 0;
@@ -208,13 +208,10 @@ export function calcEmployeeDeductions(opts: {
     if (!consideredDays.has(key)) absenceDays++;
   }
   void totalWorking;
-  const absencePerDay = settings.absenceDeductionPerDay && settings.absenceDeductionPerDay > 0
-    ? baseSalary * (settings.absenceDeductionPerDay / 100)
-    : baseSalary / 26;
-  const absenceDeduction = Math.round(absenceDays * absencePerDay);
+  const absenceDeduction = Math.round(absenceDays * dayRate);
 
   const total = lateDeduction + absenceDeduction + unpaidDeduction + permissionDeduction;
-  const breakdown = `تأخير: ${lateMinutes}د (${lateDeduction}) — غياب: ${absenceDays}ي (${absenceDeduction}) — بدون راتب: ${unpaidDays}ي (${unpaidDeduction}) — أذونات: ${permissionMinutes}د (${permissionDeduction})`;
+  const breakdown = `تأخير: ${lateMinutes}د (${lateDeduction}) — غياب وبدون راتب: ${absenceDays + unpaidDays}ي (${absenceDeduction + unpaidDeduction}) — أذونات: ${permissionMinutes}د (${permissionDeduction})`;
 
   return {
     lateMinutes,

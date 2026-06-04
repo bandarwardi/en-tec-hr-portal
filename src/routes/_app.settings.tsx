@@ -127,15 +127,13 @@ function SettingsPage() {
             <h3 className="text-base font-semibold">الخصومات (غياب / بدون راتب / أذونات)</h3>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>خصم يوم الغياب (%) من الراتب</Label>
-              <Input type="number" step="0.01" dir="ltr" className="text-right" value={data.absenceDeductionPerDay} onChange={(e) => set("absenceDeductionPerDay", Number(e.target.value))} />
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>خصم يوم الغياب وبدون راتب (%) من الراتب</Label>
+              <Input type="number" step="0.01" dir="ltr" className="text-right" value={data.absenceDeductionPerDay} onChange={(e) => {
+                const v = Number(e.target.value);
+                setData(s => ({ ...s, absenceDeductionPerDay: v, unpaidLeavePerDay: v }));
+              }} />
               <p className="text-[11px] text-muted-foreground">اتركه 0 للاعتماد التلقائي (الراتب ÷ 26، أي حوالي 3.85%).</p>
-            </div>
-            <div className="space-y-1.5">
-              <Label>خصم يوم بدون راتب (%) من الراتب</Label>
-              <Input type="number" step="0.01" dir="ltr" className="text-right" value={data.unpaidLeavePerDay} onChange={(e) => set("unpaidLeavePerDay", Number(e.target.value))} />
-              <p className="text-[11px] text-muted-foreground">اتركه 0 للاعتماد التلقائي (الراتب ÷ 30، أي حوالي 3.33%).</p>
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label>خصم دقيقة الإذن (%) من الراتب</Label>

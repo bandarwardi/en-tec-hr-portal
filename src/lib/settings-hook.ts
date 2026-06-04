@@ -17,9 +17,9 @@ export interface AppSettings {
   workDays: string;
   // Late deduction
   lateDeductionPerMinute: number;
-  // Absence
+  // Absence and Unpaid Leave (merged)
   absenceDeductionPerDay: number;
-  // Unpaid leave (per day) — if 0, falls back to salary/30
+  // Deprecated: use absenceDeductionPerDay instead
   unpaidLeavePerDay: number;
   // Permission deduction per minute
   permissionDeductionPerMinute: number;

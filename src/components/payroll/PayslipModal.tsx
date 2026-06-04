@@ -46,16 +46,24 @@ export function parseBreakdown(text: string) {
     result.lateDeduction = Number(lateMatch[2]);
   }
 
-  const absMatch = text.match(/غياب:\s*(\d+)ي\s*\((\d+)\)/);
-  if (absMatch) {
-    result.absenceDays = Number(absMatch[1]);
-    result.absenceDeduction = Number(absMatch[2]);
-  }
+  if (text.includes("غياب وبدون راتب")) {
+    const mergeMatch = text.match(/غياب وبدون راتب:\s*(\d+)ي\s*\((\d+)\)/);
+    if (mergeMatch) {
+      result.absenceDays = Number(mergeMatch[1]);
+      result.absenceDeduction = Number(mergeMatch[2]);
+    }
+  } else {
+    const absMatch = text.match(/غياب:\s*(\d+)ي\s*\((\d+)\)/);
+    if (absMatch) {
+      result.absenceDays = Number(absMatch[1]);
+      result.absenceDeduction = Number(absMatch[2]);
+    }
 
-  const unpaidMatch = text.match(/بدون راتب:\s*(\d+)ي\s*\((\d+)\)/);
-  if (unpaidMatch) {
-    result.unpaidDays = Number(unpaidMatch[1]);
-    result.unpaidDeduction = Number(unpaidMatch[2]);
+    const unpaidMatch = text.match(/بدون راتب:\s*(\d+)ي\s*\((\d+)\)/);
+    if (unpaidMatch) {
+      result.unpaidDays = Number(unpaidMatch[1]);
+      result.unpaidDeduction = Number(unpaidMatch[2]);
+    }
   }
 
   const permMatch = text.match(/أذونات:\s*(\d+)د\s*\((\d+)\)/);
@@ -239,10 +247,10 @@ export function PayslipModal({
                 
                 <TableRow>
                   <TableCell className="font-medium text-muted-foreground">
-                    غياب <span className="text-xs">({details.absenceDays} أيام)</span>
+                    غياب وبدون راتب <span className="text-xs">({details.absenceDays + details.unpaidDays} أيام)</span>
                   </TableCell>
                   <TableCell></TableCell>
-                  <TableCell className="text-destructive">{formatEGP(details.absenceDeduction)}</TableCell>
+                  <TableCell className="text-destructive">{formatEGP(details.absenceDeduction + details.unpaidDeduction)}</TableCell>
                 </TableRow>
                 
                 <TableRow>
@@ -251,14 +259,6 @@ export function PayslipModal({
                   </TableCell>
                   <TableCell></TableCell>
                   <TableCell className="text-destructive">{formatEGP(details.lateDeduction)}</TableCell>
-                </TableRow>
-                
-                <TableRow>
-                  <TableCell className="font-medium text-muted-foreground">
-                    إجازات بدون راتب <span className="text-xs">({details.unpaidDays} أيام)</span>
-                  </TableCell>
-                  <TableCell></TableCell>
-                  <TableCell className="text-destructive">{formatEGP(details.unpaidDeduction)}</TableCell>
                 </TableRow>
                 
                 <TableRow>

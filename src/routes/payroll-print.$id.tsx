@@ -191,10 +191,10 @@ function PayrollPrintPage() {
               
               <TableRow>
                 <TableCell className="font-medium text-muted-foreground">
-                  غياب <span className="text-xs">({details.absenceDays} أيام)</span>
+                  غياب وبدون راتب <span className="text-xs">({details.absenceDays + details.unpaidDays} أيام)</span>
                 </TableCell>
                 <TableCell></TableCell>
-                <TableCell className="text-destructive">{formatEGP(details.absenceDeduction)}</TableCell>
+                <TableCell className="text-destructive">{formatEGP(details.absenceDeduction + details.unpaidDeduction)}</TableCell>
               </TableRow>
               
               <TableRow>
@@ -203,14 +203,6 @@ function PayrollPrintPage() {
                 </TableCell>
                 <TableCell></TableCell>
                 <TableCell className="text-destructive">{formatEGP(details.lateDeduction)}</TableCell>
-              </TableRow>
-              
-              <TableRow>
-                <TableCell className="font-medium text-muted-foreground">
-                  إجازات بدون راتب <span className="text-xs">({details.unpaidDays} أيام)</span>
-                </TableCell>
-                <TableCell></TableCell>
-                <TableCell className="text-destructive">{formatEGP(details.unpaidDeduction)}</TableCell>
               </TableRow>
               
               <TableRow>
