@@ -14,6 +14,7 @@ import { useCollection, addItem, orderBy } from "@/lib/use-collection";
 import { toast } from "sonner";
 import { useSettings } from "@/lib/settings-hook";
 import { getLateMinutes } from "@/lib/payroll-calc";
+import { formatEGP } from "@/lib/currency";
 
 export const Route = createFileRoute("/_app/attendance")({
   component: AttendancePage,
@@ -39,7 +40,7 @@ function tone(s: string) {
 }
 
 function AttendancePage() {
-  const { data: employees } = useCollection<{ name: string; id: string }>("employees");
+  const { data: employees } = useCollection<any>("employees");
   const { data: records, loading } = useCollection<Att>("attendance", [orderBy("date", "desc")]);
   const { settings: appSettings } = useSettings();
   const [selectedEmp, setSelectedEmp] = useState<string>("");
@@ -119,27 +120,39 @@ function AttendancePage() {
                 <TableHead className="text-right">التاريخ</TableHead>
                 <TableHead className="text-right">وقت الحضور</TableHead>
                 <TableHead className="text-right">مدة التأخير</TableHead>
+                <TableHead className="text-right">قيمة الخصم</TableHead>
                 <TableHead className="text-right">الحالة</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">جاري التحميل...</TableCell></TableRow>}
-              {!loading && todayRecs.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">لا توجد سجلات لهذا التاريخ</TableCell></TableRow>}
+              {loading && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">جاري التحميل...</TableCell></TableRow>}
+              {!loading && todayRecs.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">لا توجد سجلات لهذا التاريخ</TableCell></TableRow>}
               {todayRecs.map((r) => {
-                // For old records that don't have lateMinutes saved, calculate on the fly
-                let lMins = r.lateMinutes || 0;
-                if (lMins === 0 && r.checkIn) {
-                  let m = getLateMinutes(appSettings.workStart, appSettings.workEnd, r.checkIn);
-                  let b = m - (appSettings.lateMinutes || 0);
-                  if (b > 0) lMins = b;
+                // Calculate the actual late minutes from the workStart shift time (raw late) for the deduction slabs
+                let rawLate = 0;
+                if (r.checkIn) {
+                  rawLate = getLateMinutes(appSettings.workStart, appSettings.workEnd, r.checkIn);
                 }
+
+                const emp = employees.find((e: any) => e.id === r.employeeId);
+                const baseSalary = emp?.baseSalary || 0;
+                let dayDeduction = 0;
+                if (rawLate >= 15 && rawLate <= 60) {
+                  dayDeduction = Math.round((baseSalary / 30) * 0.5);
+                } else if (rawLate > 60) {
+                  dayDeduction = Math.round((baseSalary / 30) * 1.0);
+                }
+
                 return (
                   <TableRow key={r.id}>
                     <TableCell className="font-medium">{r.employeeName}</TableCell>
                     <TableCell dir="ltr" className="text-right">{r.date}</TableCell>
                     <TableCell dir="ltr" className="text-right font-medium">{r.checkIn || "—"}</TableCell>
                     <TableCell dir="ltr" className="text-right text-destructive">
-                      {lMins > 0 ? `${lMins} دقيقة` : "—"}
+                      {rawLate > 0 ? `${rawLate} دقيقة` : "—"}
+                    </TableCell>
+                    <TableCell className="text-right text-destructive font-semibold">
+                      {dayDeduction > 0 ? formatEGP(dayDeduction) : "—"}
                     </TableCell>
                     <TableCell><Badge variant="outline" className={tone(r.status)}>{r.status}</Badge></TableCell>
                   </TableRow>
