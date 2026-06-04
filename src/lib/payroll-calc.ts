@@ -68,14 +68,13 @@ function inMonth(date: string, month: string): boolean {
   return date?.slice(0, 7) === month;
 }
 
-function workingDaysInMonth(month: string): number {
-  // count Sun..Thu by default
+function workingDaysInMonth(month: string, workingDays: number[]): number {
   const [y, m] = month.split("-").map(Number);
   const days = new Date(y, m, 0).getDate();
   let n = 0;
   for (let d = 1; d <= days; d++) {
     const wd = new Date(y, m - 1, d).getDay(); // 0 sun..6 sat
-    if (wd !== 5 && wd !== 6) n++; // exclude Fri/Sat
+    if (workingDays.includes(wd)) n++;
   }
   return n;
 }
@@ -102,6 +101,7 @@ export function calcEmployeeDeductions(opts: {
   settings: AppSettings;
 }): EmployeeMonthDeductions {
   const { employeeId, baseSalary, month, attendance, leaves, settings } = opts;
+  const workingDays = settings.workingDays || [0, 1, 2, 3, 4];
 
   // --- Approved leaves (this month) ---
   const approved = leaves.filter(
@@ -187,7 +187,7 @@ export function calcEmployeeDeductions(opts: {
   }
 
   // --- Absence: working days in month minus attended minus approved leave days ---
-  const totalWorking = workingDaysInMonth(month);
+  const totalWorking = workingDaysInMonth(month, workingDays);
   const attendedDates = new Set(empAtt.map((a) => a.date));
   const consideredDays = new Set<string>([...attendedDates, ...leaveDaysSet]);
   // Count working days in month that are not covered
@@ -200,7 +200,7 @@ export function calcEmployeeDeductions(opts: {
   for (let d = 1; d <= endDay; d++) {
     const date = new Date(y, mm - 1, d);
     const wd = date.getDay();
-    if (wd === 5 || wd === 6) continue;
+    if (!workingDays.includes(wd)) continue;
     const key = `${y}-${String(mm).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     if (!consideredDays.has(key)) absenceDays++;
   }

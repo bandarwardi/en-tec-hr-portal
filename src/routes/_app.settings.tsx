@@ -81,7 +81,39 @@ function SettingsPage() {
             <div className="space-y-1.5"><Label>نهاية الدوام</Label><Input type="time" dir="ltr" className="text-right" value={data.workEnd} onChange={(e) => set("workEnd", e.target.value)} /></div>
             <div className="space-y-1.5"><Label>فترة السماح (دقيقة)</Label><Input type="number" dir="ltr" className="text-right" value={data.lateMinutes} onChange={(e) => set("lateMinutes", Number(e.target.value))} /></div>
             <div className="space-y-1.5"><Label>خصم الدقيقة (ج.م)</Label><Input type="number" dir="ltr" className="text-right" value={data.lateDeductionPerMinute} onChange={(e) => set("lateDeductionPerMinute", Number(e.target.value))} /></div>
-            <div className="space-y-1.5 sm:col-span-2"><Label>أيام العمل</Label><Input value={data.workDays} onChange={(e) => set("workDays", e.target.value)} /></div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label>أيام العمل الأسبوعية</Label>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {[
+                  { label: "الأحد", value: 0 },
+                  { label: "الإثنين", value: 1 },
+                  { label: "الثلاثاء", value: 2 },
+                  { label: "الأربعاء", value: 3 },
+                  { label: "الخميس", value: 4 },
+                  { label: "الجمعة", value: 5 },
+                  { label: "السبت", value: 6 },
+                ].map((day) => {
+                  const isSelected = (data.workingDays || [0, 1, 2, 3, 4]).includes(day.value);
+                  return (
+                    <Button
+                      key={day.value}
+                      type="button"
+                      variant={isSelected ? "default" : "outline"}
+                      className={`h-9 px-3 text-xs cursor-pointer ${isSelected ? "bg-primary text-primary-foreground font-bold hover:bg-primary/90" : "hover:bg-accent"}`}
+                      onClick={() => {
+                        const current = data.workingDays || [0, 1, 2, 3, 4];
+                        const next = current.includes(day.value)
+                          ? current.filter((v) => v !== day.value)
+                          : [...current, day.value];
+                        set("workingDays", next.sort((a, b) => a - b));
+                      }}
+                    >
+                      {day.label}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
           <p className="mt-3 rounded-md bg-warning/10 p-2 text-xs text-warning">مثال: تأخير 30 دقيقة − سماح 10 = 20 × سعر/دقيقة = الخصم.</p>
         </Card>
