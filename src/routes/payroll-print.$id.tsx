@@ -66,6 +66,7 @@ function PayrollPrintPage() {
   }
 
   const details = parseBreakdown(slip.breakdown || "");
+  const baseAllow = slip.allow - details.customAllowance - (slip.salesBonus || 0) - (slip.salesTarget || 0);
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-8 flex flex-col items-center">
@@ -146,10 +147,10 @@ function PayrollPrintPage() {
                 <TableCell className="text-success">{formatEGP(slip.base)}</TableCell>
                 <TableCell></TableCell>
               </TableRow>
-              {slip.allow - details.customAllowance > 0 && (
+              {baseAllow > 0 && (
                 <TableRow>
                   <TableCell className="font-medium">البدلات والمكافآت الأساسية</TableCell>
-                  <TableCell className="text-success">{formatEGP(slip.allow - details.customAllowance)}</TableCell>
+                  <TableCell className="text-success">{formatEGP(baseAllow)}</TableCell>
                   <TableCell></TableCell>
                 </TableRow>
               )}
@@ -159,6 +160,24 @@ function PayrollPrintPage() {
                     علاوات إضافية <span className="text-xs text-muted-foreground">({details.customAllowanceReasons})</span>
                   </TableCell>
                   <TableCell className="text-success">{formatEGP(details.customAllowance)}</TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              )}
+              {slip.salesBonus > 0 && (
+                <TableRow>
+                  <TableCell className="font-medium">
+                    بونص المبيعات <span className="text-xs text-muted-foreground">(مبيعات: {slip.salesUSD}$)</span>
+                  </TableCell>
+                  <TableCell className="text-success">{formatEGP(slip.salesBonus)}</TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              )}
+              {slip.salesTarget > 0 && (
+                <TableRow>
+                  <TableCell className="font-medium">
+                    عمولة تحقيق التارجت <span className="text-xs text-muted-foreground">(مبيعات: {slip.salesUSD}$ × 2.5)</span>
+                  </TableCell>
+                  <TableCell className="text-success">{formatEGP(slip.salesTarget)}</TableCell>
                   <TableCell></TableCell>
                 </TableRow>
               )}

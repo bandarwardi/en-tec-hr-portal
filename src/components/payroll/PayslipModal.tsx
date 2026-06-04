@@ -93,6 +93,7 @@ export function PayslipModal({
   if (!slip) return null;
 
   const details = parseBreakdown(slip.breakdown || "");
+  const baseAllow = slip.allow - details.customAllowance - ((slip as any).salesBonus || 0) - ((slip as any).salesTarget || 0);
   
   const handlePrint = () => {
     window.open(`/payroll-print/${slip.id}`, "_blank");
@@ -191,10 +192,10 @@ export function PayslipModal({
                   <TableCell className="text-success">{formatEGP(slip.base)}</TableCell>
                   <TableCell></TableCell>
                 </TableRow>
-                {slip.allow - details.customAllowance > 0 && (
+                {baseAllow > 0 && (
                   <TableRow>
                     <TableCell className="font-medium">البدلات والمكافآت الأساسية</TableCell>
-                    <TableCell className="text-success">{formatEGP(slip.allow - details.customAllowance)}</TableCell>
+                    <TableCell className="text-success">{formatEGP(baseAllow)}</TableCell>
                     <TableCell></TableCell>
                   </TableRow>
                 )}
@@ -205,6 +206,26 @@ export function PayslipModal({
                       علاوات إضافية <span className="text-xs text-muted-foreground">({details.customAllowanceReasons})</span>
                     </TableCell>
                     <TableCell className="text-success">{formatEGP(details.customAllowance)}</TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                )}
+
+                {((slip as any).salesBonus || 0) > 0 && (
+                  <TableRow>
+                    <TableCell className="font-medium">
+                      بونص المبيعات <span className="text-xs text-muted-foreground">(مبيعات: {(slip as any).salesUSD || 0}$)</span>
+                    </TableCell>
+                    <TableCell className="text-success">{formatEGP((slip as any).salesBonus)}</TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                )}
+
+                {((slip as any).salesTarget || 0) > 0 && (
+                  <TableRow>
+                    <TableCell className="font-medium">
+                      عمولة تحقيق التارجت <span className="text-xs text-muted-foreground">(مبيعات: {(slip as any).salesUSD || 0}$ × 2.5)</span>
+                    </TableCell>
+                    <TableCell className="text-success">{formatEGP((slip as any).salesTarget)}</TableCell>
                     <TableCell></TableCell>
                   </TableRow>
                 )}

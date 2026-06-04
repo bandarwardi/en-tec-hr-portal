@@ -5,6 +5,7 @@ import { StatCard } from "@/components/layout/StatCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Wallet, TrendingUp, Receipt, Download, FileText, Trash2 } from "lucide-react";
 import { useCollection, addItem, updateItem, deleteItem, getDocOnce, orderBy } from "@/lib/use-collection";
@@ -109,7 +110,10 @@ function PayrollPage() {
         deduct: totalDeduct, 
         net, 
         status: "بانتظار الدفع",
-        breakdown
+        breakdown,
+        salesUSD: 0,
+        salesBonus: 0,
+        salesTarget: 0
       });
     }
     toast.success("تم إنشاء كشف الرواتب والتلقائي");
@@ -134,10 +138,45 @@ function PayrollPage() {
     toast.success("تم حذف جميع كشوفات الشهر");
   };
 
+  const updateSalesUSD = async (slip: Slip, usd: number) => {
+    let bonus = 0;
+    if (usd >= 1500 && usd < 2000) {
+      bonus = 500;
+    } else if (usd >= 2000) {
+      bonus = 1000;
+    }
+    const target = usd * 2.5;
+
+    const prevBonus = (slip as any).salesBonus || 0;
+    const prevTarget = (slip as any).salesTarget || 0;
+    const baselineAllow = (slip.allow || 0) - prevBonus - prevTarget;
+    const newAllow = baselineAllow + bonus + target;
+    const newNet = slip.base + newAllow - slip.deduct;
+
+    const baseBreakdown = slip.breakdown?.split(" | مبيعات:")[0] || "";
+    const newBreakdown = usd > 0 
+      ? `${baseBreakdown} | مبيعات: ${usd}$ (بونص: ${bonus} + تارجت: ${target})`
+      : baseBreakdown;
+
+    try {
+      await updateItem("payroll", slip.id!, {
+        salesUSD: usd,
+        salesBonus: bonus,
+        salesTarget: target,
+        allow: newAllow,
+        net: newNet,
+        breakdown: newBreakdown
+      });
+      toast.success("تم تحديث مبيعات الموظف والراتب الصافي");
+    } catch (err: any) {
+      toast.error("فشل التحديث", { description: err.message });
+    }
+  };
+
   const exportCsv = () => {
     const rows = [
-      ["الشهر", "الموظف", "الأساسي", "البدلات", "الخصومات", "الصافي", "الحالة", "التفاصيل"],
-      ...slips.map((s) => [s.month, s.employeeName, s.base, s.allow, s.deduct, s.net, s.status, s.breakdown || ""]),
+      ["الشهر", "الموظف", "الأساسي", "المبيعات ($)", "البدلات", "الخصومات", "الصافي", "الحالة", "التفاصيل"],
+      ...slips.map((s) => [s.month, s.employeeName, s.base, (s as any).salesUSD || 0, s.allow, s.deduct, s.net, s.status, s.breakdown || ""]),
     ];
     const csv = "\uFEFF" + rows.map((r) => r.map((c) => `"${String(c ?? "")}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -182,6 +221,7 @@ function PayrollPage() {
               <TableRow>
                 <TableHead className="text-right">الموظف</TableHead>
                 <TableHead className="text-right">الراتب الأساسي</TableHead>
+                <TableHead className="text-right">المبيعات ($)</TableHead>
                 <TableHead className="text-right">البدلات</TableHead>
                 <TableHead className="text-right">الخصومات</TableHead>
                 <TableHead className="text-right">الصافي</TableHead>
@@ -197,6 +237,20 @@ function PayrollPage() {
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.employeeName}</TableCell>
                   <TableCell>{formatEGP(s.base)}</TableCell>
+                  <TableCell>
+                    {isSalesEmployee(employees.find((emp: any) => emp.id === s.employeeId)?.role) ? (
+                      <Input
+                        type="number"
+                        value={(s as any).salesUSD === 0 ? "" : (s as any).salesUSD || ""}
+                        onChange={(e) => updateSalesUSD(s, Number(e.target.value) || 0)}
+                        placeholder="0$"
+                        className="w-24 text-right h-8"
+                        disabled={s.status === "مدفوع"}
+                      />
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-success">+{formatEGP(s.allow)}</TableCell>
                   <TableCell className="text-destructive">-{formatEGP(s.deduct)}</TableCell>
                   <TableCell className="font-bold">{formatEGP(s.net)}</TableCell>
@@ -239,4 +293,10 @@ function PayrollPage() {
       />
     </div>
   );
+}
+
+function isSalesEmployee(role?: string): boolean {
+  if (!role) return false;
+  const r = role.toLowerCase();
+  return r.includes("سيلز") || r.includes("مبيعات") || r.includes("sales");
 }

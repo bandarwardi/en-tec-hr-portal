@@ -118,6 +118,7 @@ export function calcEmployeeDeductions(opts: {
   // --- Late ---
   const empAtt = attendance.filter((a) => a.employeeId === employeeId && inMonth(a.date, month));
   let lateMinutes = 0;
+  let lateDeduction = 0;
   for (const a of empAtt) {
     if (!a.checkIn) continue;
     
@@ -133,10 +134,20 @@ export function calcEmployeeDeductions(opts: {
     }
     
     const late = getLateMinutes(effectiveStart, settings.workEnd, a.checkIn);
-    const beyondGrace = late - (settings.lateMinutes || 0);
-    if (beyondGrace > 0) lateMinutes += beyondGrace;
+    if (late > 0) {
+      lateMinutes += late;
+      if (late < 15) {
+        // Less than 15 minutes: no deduction
+      } else if (late >= 15 && late <= 60) {
+        // 15 to 60 minutes: 0.5 day deduction
+        lateDeduction += (baseSalary / 30) * 0.5;
+      } else {
+        // More than 60 minutes: 1 day deduction
+        lateDeduction += (baseSalary / 30) * 1.0;
+      }
+    }
   }
-  const lateDeduction = Math.round(lateMinutes * (settings.lateDeductionPerMinute || 0));
+  lateDeduction = Math.round(lateDeduction);
 
   // Per-day rate for unpaid leave & absence
   const dayRate = settings.unpaidLeavePerDay && settings.unpaidLeavePerDay > 0
@@ -196,7 +207,7 @@ export function calcEmployeeDeductions(opts: {
   void totalWorking;
   const absencePerDay = settings.absenceDeductionPerDay && settings.absenceDeductionPerDay > 0
     ? settings.absenceDeductionPerDay
-    : dayRate;
+    : baseSalary / 26;
   const absenceDeduction = Math.round(absenceDays * absencePerDay);
 
   const total = lateDeduction + absenceDeduction + unpaidDeduction + permissionDeduction;
